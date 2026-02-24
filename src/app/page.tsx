@@ -7,7 +7,6 @@ import ExperienceSection from '@/components/sections/ExperienceSection';
 import EducationSection from '@/components/sections/EducationSection';
 import AiSkillAlignerSection from '@/components/sections/AiSkillAlignerSection';
 import ContactSection from '@/components/sections/ContactSection';
-import { Separator } from '@/components/ui/separator';
 
 export default function Home() {
   return (
