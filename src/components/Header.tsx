@@ -37,7 +37,7 @@ const Header = () => {
     <header
       className={cn(
         'sticky top-0 z-50 w-full transition-all duration-300 ease-in-out',
-        hasScrolled ? 'bg-background/80 backdrop-blur-lg border-b border-border' : 'bg-transparent'
+        hasScrolled ? 'bg-background/80 backdrop-blur-lg' : 'bg-transparent'
       )}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
