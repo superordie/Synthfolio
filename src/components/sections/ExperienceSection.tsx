@@ -12,7 +12,6 @@ const ExperienceSection = () => {
       </div>
 
       <div className="relative max-w-2xl mx-auto">
-        <div className="absolute left-4 top-4 h-full w-0.5 bg-border -z-10" />
         <div className="space-y-12">
           {portfolioContent.workHistory.map((job, index) => (
             <div key={index} className="pl-12 relative">
