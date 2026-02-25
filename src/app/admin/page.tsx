@@ -21,7 +21,6 @@ export default function AdminPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Simple hardcoded password for MVP. 
   const ADMIN_PASSWORD = 'russell2025'; 
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -30,27 +29,26 @@ export default function AdminPage() {
 
     if (password === ADMIN_PASSWORD) {
       try {
-        // Sign in anonymously to Firebase to satisfy security rules for writing
         if (auth) {
           await signInAnonymously(auth);
         }
         login();
         toast({
-          title: "Welcome back, Russell",
-          description: "Admin mode is now active.",
+          title: "Admin Mode Active",
+          description: "Welcome back. You can now edit your portfolio directly.",
         });
         router.push('/');
       } catch (error) {
         toast({
           title: "Authentication Error",
-          description: "Could not connect to database for write access.",
+          description: "Could not establish secure admin session.",
           variant: "destructive",
         });
       }
     } else {
       toast({
         title: "Access Denied",
-        description: "Invalid admin password.",
+        description: "Invalid credentials.",
         variant: "destructive",
       });
     }
@@ -59,51 +57,52 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-sm shadow-xl">
         <CardHeader className="text-center">
-          <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4">
-            {isAdmin ? <Unlock className="text-primary h-6 w-6" /> : <Lock className="text-primary h-6 w-6" />}
+          <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            {isAdmin ? <Unlock className="text-primary h-8 w-8" /> : <Lock className="text-primary h-8 w-8" />}
           </div>
-          <CardTitle className="font-headline text-2xl">
-            {isAdmin ? 'Admin Active' : 'Portfolio Administration'}
+          <CardTitle className="font-headline text-3xl font-bold">
+            {isAdmin ? 'Session Active' : 'Restricted Access'}
           </CardTitle>
           <CardDescription>
             {isAdmin 
-              ? 'You have full editing permissions.' 
-              : 'Enter password to unlock editing controls.'}
+              ? 'Portfolio management tools are now visible.' 
+              : 'Authorized personnel only. Please verify your identity.'}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           {isAdmin ? (
             <div className="space-y-4">
-              <Button asChild className="w-full" variant="outline">
+              <Button asChild className="w-full h-12 text-lg" variant="default">
                 <Link href="/">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Go to Portfolio
+                  <ArrowLeft className="mr-2 h-5 w-5" /> Back to Portfolio
                 </Link>
               </Button>
               <Button 
                 onClick={() => { logout(); router.refresh(); }} 
-                className="w-full" 
+                className="w-full h-12 text-lg" 
                 variant="destructive"
               >
-                Deactivate Admin Mode
+                Log Out
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <Input
                   type="password"
-                  placeholder="Enter password..."
+                  placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="h-12 text-lg bg-background/50"
                   autoFocus
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Enter Admin Mode'}
+              <Button type="submit" className="w-full h-12 text-lg" disabled={isLoading}>
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Enter Admin Mode'}
               </Button>
-              <Button asChild variant="ghost" className="w-full">
+              <Button asChild variant="ghost" className="w-full h-12 text-muted-foreground">
                 <Link href="/">Cancel</Link>
               </Button>
             </form>
