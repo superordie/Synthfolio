@@ -19,6 +19,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,9 +31,9 @@ const projectSchema = z.object({
   projectTitle: z.string().min(1, 'Project title is required'),
   projectPurposeProblemSolved: z
     .string()
-    .min(1, 'Project purpose is required'),
-  toolsOrTechnologiesUsed: z.string().min(1, 'Tools/technologies are required'),
-  skillsDemonstrated: z.string().min(1, 'Skills are required'),
+    .min(10, 'Please describe the purpose in more detail (min 10 characters)'),
+  toolsOrTechnologiesUsed: z.string().min(1, 'At least one technology is required'),
+  skillsDemonstrated: z.string().min(1, 'At least one skill is required'),
   projectLink: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 });
 
@@ -72,15 +73,23 @@ export default function ProjectFormDialog({
         projectLink: project.projectLink || '',
       });
     } else {
-      form.reset();
+      form.reset({
+        projectTitle: '',
+        projectPurposeProblemSolved: '',
+        toolsOrTechnologiesUsed: '',
+        skillsDemonstrated: '',
+        projectLink: '',
+      });
     }
   }, [project, form, open]);
   
   const handleFormSubmit = (data: ProjectFormData) => {
     const processedData = {
-      ...data,
-      toolsOrTechnologiesUsed: data.toolsOrTechnologiesUsed.split(',').map((s) => s.trim()),
-      skillsDemonstrated: data.skillsDemonstrated.split(',').map((s) => s.trim()),
+      projectTitle: data.projectTitle,
+      projectPurposeProblemSolved: data.projectPurposeProblemSolved,
+      projectLink: data.projectLink,
+      toolsOrTechnologiesUsed: data.toolsOrTechnologiesUsed.split(',').map((s) => s.trim()).filter(s => s !== ''),
+      skillsDemonstrated: data.skillsDemonstrated.split(',').map((s) => s.trim()).filter(s => s !== ''),
     };
     onSubmit(processedData);
     onOpenChange(false);
@@ -90,9 +99,9 @@ export default function ProjectFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
-          <DialogTitle>{project ? 'Edit Project' : 'Add New Project'}</DialogTitle>
+          <DialogTitle>{project ? 'Edit Project Details' : 'Add New Portfolio Project'}</DialogTitle>
           <DialogDescription>
-            {project ? 'Update the details of your project.' : 'Fill in the details for your new project.'}
+            Highlight your best work with detailed descriptions and the tech stack you used.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -104,7 +113,7 @@ export default function ProjectFormDialog({
                 <FormItem>
                   <FormLabel>Project Title</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="e.g. Synthfolio" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -115,48 +124,52 @@ export default function ProjectFormDialog({
               name="projectPurposeProblemSolved"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Purpose / Problem Solved</FormLabel>
+                  <FormLabel>Overview / Problem Solved</FormLabel>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea {...field} placeholder="Describe the project goal and your contribution..." rows={4} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="toolsOrTechnologiesUsed"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tools & Technologies (comma-separated)</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="skillsDemonstrated"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Skills Demonstrated (comma-separated)</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="toolsOrTechnologiesUsed"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Technologies</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="React, Next.js, Firebase..." />
+                      </FormControl>
+                      <FormDescription>Comma-separated list</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="skillsDemonstrated"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Skills Highlighted</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="UI Design, Backend Integration..." />
+                      </FormControl>
+                      <FormDescription>Comma-separated list</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            </div>
             <FormField
               control={form.control}
               name="projectLink"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Link</FormLabel>
+                  <FormLabel>Live Link or GitHub Repo (Optional)</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="https://github.com/..." />
+                    <Input {...field} placeholder="https://github.com/yourusername/repo" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -164,7 +177,7 @@ export default function ProjectFormDialog({
             />
             <DialogFooter>
                 <DialogClose asChild>
-                    <Button type="button" variant="secondary">Cancel</Button>
+                    <Button type="button" variant="ghost">Cancel</Button>
                 </DialogClose>
                 <Button type="submit">Save Project</Button>
             </DialogFooter>

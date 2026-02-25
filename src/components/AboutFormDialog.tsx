@@ -1,4 +1,3 @@
-
 'use client';
 
 import { z } from 'zod';
@@ -26,7 +25,7 @@ import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 
 const aboutSchema = z.object({
-  about: z.string().min(10, 'About text must be at least 10 characters'),
+  about: z.string().min(20, 'Please provide a more detailed bio (at least 20 characters)'),
 });
 
 type AboutFormData = z.infer<typeof aboutSchema>;
@@ -64,11 +63,11 @@ export default function AboutFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>Update Bio</DialogTitle>
+          <DialogTitle>Edit About Me</DialogTitle>
           <DialogDescription>
-            Update your professional summary.
+            Your bio is the first thing visitors see. Keep it professional, engaging, and reflective of your goals.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -78,9 +77,14 @@ export default function AboutFormDialog({
               name="about"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>About Me</FormLabel>
+                  <FormLabel>Professional Summary</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={10} className="bg-background/50" />
+                    <Textarea 
+                      {...field} 
+                      rows={12} 
+                      className="bg-background/50 leading-relaxed" 
+                      placeholder="Tell the world about your journey and expertise..."
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -88,9 +92,9 @@ export default function AboutFormDialog({
             />
             <DialogFooter>
                 <DialogClose asChild>
-                    <Button type="button" variant="secondary">Cancel</Button>
+                    <Button type="button" variant="ghost">Discard</Button>
                 </DialogClose>
-                <Button type="submit">Save Changes</Button>
+                <Button type="submit">Update Bio</Button>
             </DialogFooter>
           </form>
         </Form>

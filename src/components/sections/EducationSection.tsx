@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -77,7 +76,7 @@ const EducationSection = () => {
                     <p className="text-muted-foreground">{edu.institutionName}</p>
                     <p className="text-sm text-muted-foreground">Completed: {edu.completionDate}</p>
                   </div>
-                  {isAdmin && !edu.id.startsWith('static-') && (
+                  {isAdmin && !edu.id.toString().startsWith('static-') && (
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingEdu(edu); setIsEduOpen(true); }}>
                         <Edit2 className="h-3 w-3" />
@@ -123,7 +122,7 @@ const EducationSection = () => {
                     <h3 className="font-semibold text-lg">{cert.certificationName}</h3>
                     <p className="text-muted-foreground text-sm">Issued by {cert.issuingOrganization} &bull; {cert.yearEarned}</p>
                   </div>
-                  {isAdmin && !cert.id.startsWith('static-') && (
+                  {isAdmin && !cert.id.toString().startsWith('static-') && (
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingCert(cert); setIsCertOpen(true); }}>
                         <Edit2 className="h-3 w-3" />

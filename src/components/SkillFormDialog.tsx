@@ -1,4 +1,3 @@
-
 'use client';
 
 import { z } from 'zod';
@@ -20,6 +19,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ import type { SkillCategory } from '@/firebase/firestore/skills';
 
 const skillSchema = z.object({
   title: z.string().min(1, 'Category title is required'),
-  skills: z.string().min(1, 'Skills are required'),
+  skills: z.string().min(1, 'At least one skill is required'),
 });
 
 type SkillFormData = z.infer<typeof skillSchema>;
@@ -61,7 +61,10 @@ export default function SkillFormDialog({
         skills: category.skills.join(', '),
       });
     } else {
-      form.reset();
+      form.reset({
+        title: '',
+        skills: '',
+      });
     }
   }, [category, form, open]);
   
@@ -78,9 +81,9 @@ export default function SkillFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{category ? 'Edit Skill Category' : 'Add Skill Category'}</DialogTitle>
+          <DialogTitle>{category ? 'Edit Skill Category' : 'Add New Skill Category'}</DialogTitle>
           <DialogDescription>
-            {category ? 'Update your skills.' : 'Add a new category of expertise.'}
+            Organize your expertise into clear categories for visitors.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -90,9 +93,9 @@ export default function SkillFormDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category Title</FormLabel>
+                  <FormLabel>Category Name</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="e.g. Technical Skills" />
+                    <Input {...field} placeholder="e.g. Technical Skills, Soft Skills" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -103,10 +106,13 @@ export default function SkillFormDialog({
               name="skills"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Skills (comma-separated)</FormLabel>
+                  <FormLabel>Skills List</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="React, Next.js, Firebase..." />
                   </FormControl>
+                  <FormDescription>
+                    Separate multiple skills with commas.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -115,7 +121,7 @@ export default function SkillFormDialog({
                 <DialogClose asChild>
                     <Button type="button" variant="secondary">Cancel</Button>
                 </DialogClose>
-                <Button type="submit">Save Category</Button>
+                <Button type="submit">Save Changes</Button>
             </DialogFooter>
           </form>
         </Form>
