@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Code2, Menu, X, LogIn, LogOut } from 'lucide-react';
+import { Code2, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { portfolioData } from '@/lib/data';
 import {
@@ -12,9 +12,6 @@ import {
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
-import { useUser } from '@/firebase';
-import { signInWithGoogle, signOutWithGoogle } from '@/firebase/auth';
-
 
 const navLinks = [
   { href: '#skills', label: 'Skills' },
@@ -26,7 +23,6 @@ const navLinks = [
 
 const Header = () => {
   const [hasScrolled, setHasScrolled] = useState(false);
-  const { user, loading } = useUser();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,24 +31,6 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const AuthButton = () => {
-    if (loading) return <Button variant="ghost" size="icon" disabled />;
-    if (user) {
-      return (
-        <Button onClick={signOutWithGoogle} variant="ghost" title="Sign Out">
-          <LogOut />
-          <span className="sr-only">Sign Out</span>
-        </Button>
-      )
-    }
-    return (
-       <Button onClick={signInWithGoogle} variant="ghost" title="Sign In">
-          <LogIn />
-          <span className="sr-only">Sign In</span>
-        </Button>
-    )
-  }
 
   return (
     <header
@@ -79,11 +57,9 @@ const Header = () => {
              <Button asChild>
                 <Link href="#contact">Contact Me</Link>
             </Button>
-            <AuthButton />
           </nav>
           
           <div className="md:hidden flex items-center">
-            <AuthButton />
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
