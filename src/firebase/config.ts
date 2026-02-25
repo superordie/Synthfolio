@@ -1,4 +1,4 @@
-// This configuration will be populated by the Firebase project provisioning process
+// This configuration is populated by environment variables defined in .env
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
