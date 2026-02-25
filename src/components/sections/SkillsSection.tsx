@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import SkillFormDialog from '@/components/SkillFormDialog';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { addSkillCategory, updateSkillCategory, deleteSkillCategory, type SkillCategory } from '@/firebase/firestore/skills';
 
 const SkillsSection = () => {
@@ -25,7 +25,7 @@ const SkillsSection = () => {
     return query(collection(firestore, 'skills'), orderBy('title', 'asc'));
   }, [firestore]);
 
-  const { data: liveSkills, isLoading } = useCollection<SkillCategory>(skillsQuery);
+  const { data: liveSkills } = useCollection<SkillCategory>(skillsQuery);
 
   // Fallback to static data if live data is empty
   const staticCategories = [
@@ -102,12 +102,14 @@ const SkillsSection = () => {
         ))}
       </div>
 
-      <SkillFormDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
-        onSubmit={handleSubmit} 
-        category={editingCategory}
-      />
+      {isAdmin && (
+        <SkillFormDialog 
+          open={isDialogOpen} 
+          onOpenChange={setIsDialogOpen} 
+          onSubmit={handleSubmit} 
+          category={editingCategory}
+        />
+      )}
     </Section>
   );
 };

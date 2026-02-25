@@ -12,7 +12,7 @@ export function useAdmin() {
 
   useEffect(() => {
     // Check initial state
-    const adminStatus = localStorage.getItem('portfolio_admin') === 'true';
+    const adminStatus = typeof window !== 'undefined' && localStorage.getItem('portfolio_admin') === 'true';
     setIsAdmin(adminStatus);
 
     // Listen for storage changes (e.g. from other tabs or the admin page)

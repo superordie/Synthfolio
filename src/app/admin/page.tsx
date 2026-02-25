@@ -22,7 +22,6 @@ export default function AdminPage() {
   const { toast } = useToast();
 
   // Simple hardcoded password for MVP. 
-  // In a real app, this would be checked against a secure backend.
   const ADMIN_PASSWORD = 'russell2025'; 
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -32,7 +31,9 @@ export default function AdminPage() {
     if (password === ADMIN_PASSWORD) {
       try {
         // Sign in anonymously to Firebase to satisfy security rules for writing
-        await signInAnonymously(auth);
+        if (auth) {
+          await signInAnonymously(auth);
+        }
         login();
         toast({
           title: "Welcome back, Russell",
@@ -41,8 +42,8 @@ export default function AdminPage() {
         router.push('/');
       } catch (error) {
         toast({
-          title: "Firebase Error",
-          description: "Could not authenticate with database.",
+          title: "Authentication Error",
+          description: "Could not connect to database for write access.",
           variant: "destructive",
         });
       }

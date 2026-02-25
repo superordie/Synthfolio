@@ -119,12 +119,14 @@ const ProjectsSection = () => {
         ))}
       </div>
 
-      <ProjectFormDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
-        onSubmit={handleSubmit} 
-        project={editingProject}
-      />
+      {isAdmin && (
+        <ProjectFormDialog 
+          open={isDialogOpen} 
+          onOpenChange={setIsDialogOpen} 
+          onSubmit={handleSubmit} 
+          project={editingProject}
+        />
+      )}
     </Section>
   );
 };
