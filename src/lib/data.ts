@@ -110,7 +110,7 @@ export const portfolioContent = {
       projectPurposeProblemSolved: "Built a fully local AI agent using Ollama and Python to run OpenAI-style chat completions without cloud APIs. I configured the environment, installed a local model, and validated the pipeline with real prompts.",
       toolsOrTechnologiesUsed: ["Python", "Ollama", "REST API", "Local LLMs (qwen2:7b)"],
       skillsDemonstrated: ["API Integration", "Local Environment Setup", "Troubleshooting", "Functional AI Workflows"],
-      projectLink: "https://github.com/superordie/Local-AI-Agent-Pipeline",
+      projectLink: "https://github.com/superordie/A.I.",
     },
     {
       projectTitle: "Personal Portfolio Website",
