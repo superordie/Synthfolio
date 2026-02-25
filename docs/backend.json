@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "Project": {
+      "title": "Project",
+      "description": "A portfolio project.",
+      "type": "object",
+      "properties": {
+        "projectTitle": {
+          "type": "string",
+          "description": "The title of the project."
+        },
+        "projectPurposeProblemSolved": {
+          "type": "string",
+          "description": "A description of the project's purpose and the problem it solves."
+        },
+        "toolsOrTechnologiesUsed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of tools or technologies used."
+        },
+        "skillsDemonstrated": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of skills demonstrated in the project."
+        },
+        "projectLink": {
+          "type": "string",
+          "format": "uri",
+          "description": "A URL link to the project."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "The UID of the user who owns this project."
+        }
+      },
+      "required": [
+        "projectTitle",
+        "projectPurposeProblemSolved",
+        "toolsOrTechnologiesUsed",
+        "skillsDemonstrated",
+        "ownerId"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "google"
+    ]
+  },
+  "firestore": {
+    "/projects/{projectId}": {
+      "schema": {
+        "$ref": "#/backend/entities/Project"
+      },
+      "description": "Collection of portfolio projects."
+    }
+  }
+}
