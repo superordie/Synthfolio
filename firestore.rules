@@ -1,146 +1,56 @@
 /**
- * PORTFOLIO SECURITY RULES (PROTOTYPING MODE)
+ * PORTFOLIO SECURITY RULES
  *
- * Core Philosophy:
- * This ruleset implements a robust path-based ownership model for a single-user portfolio system.
- * It is designed for "Admin Mode" functionality where the portfolio owner has full control over 
- * content while the general public is restricted to read-only access.
- *
- * Data Structure:
- * All portfolio data is organized hierarchically under a top-level user identifier:
- * /users/{userId}/portfolio - The root profile document.
- * /users/{userId}/portfolio/{subcollection}/{id} - Associated data like projects, education, and skills.
- *
- * Key Security Decisions:
- * 1. Public Visibility: All portfolio content is publicly readable (get and list) to allow
- *    visitors to view the portfolio without signing in.
- * 2. Path-Based Authorization: The {userId} segment in the document path is the "Source of Truth"
- *    for ownership. Write access is granted only if the authenticated user's UID matches this segment.
- * 3. Prototyping Flexibility: Rules enforce WHO can write and WHAT relational links must be maintained,
- *    but do not enforce a strict schema for the content itself (e.g., descriptions, titles).
- * 4. Relational Integrity: On creation, documents must include a field (e.g., userPortfolioId) 
- *    that matches the path ID to ensure data consistency.
- *
- * Denormalization for Authorization:
- * This structure leverages the path itself as a denormalized piece of authorization data. By nesting
- * all related collections under /users/{userId}/portfolio, we avoid costly get() calls to 
- * verify ownership, as the owner's identity is encoded directly in the URI of every document.
+ * This ruleset defines access for the portfolio's top-level collections.
+ * 1. Public Read: Anyone can view skills, projects, experience, and education.
+ * 2. Admin Write: Only authenticated users (who have logged in via the /admin page) 
+ *    can create, update, or delete content.
  */
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- GLOBAL HELPER FUNCTIONS ---
+    // --- HELPER FUNCTIONS ---
 
-    /**
-     * @description Checks if the request is made by an authenticated user.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the authenticated user's UID matches the provided userId from the path.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /**
-     * @description Combines ownership check with a check for document existence for destructive operations.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
     // --- COLLECTION RULES ---
 
-    /**
-     * @description Rules for the core UserPortfolio document.
-     * @path /users/{userId}/portfolio
-     * @allow (get/list) for anyone (public portfolio).
-     * @allow (create) if the user's UID matches the path segment and data.id matches.
-     * @deny (write) if the authenticated user is not the owner of this specific path.
-     * @principle Path-based ownership and relational link validation.
-     */
-    match /users/{userId}/portfolio {
-      allow get, list: if true;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+    // Rules for individual portfolio collections
+    // These allow public viewing but restrict modifications to the admin.
+
+    match /skills/{id} {
+      allow read: if true;
+      allow write: if isSignedIn();
     }
 
-    /**
-     * @description Rules for education entries belonging to a portfolio.
-     * @path /users/{userId}/portfolio/education/{educationEntryId}
-     * @allow (create) if the userPortfolioId in data matches the path userId.
-     * @principle Validates relational integrity between subcollection and parent path.
-     */
-    match /users/{userId}/portfolio/education/{educationEntryId} {
-      allow get, list: if true;
-      allow create: if isOwner(userId) && request.resource.data.userPortfolioId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userPortfolioId == resource.data.userPortfolioId;
-      allow delete: if isExistingOwner(userId);
+    match /projects/{id} {
+      allow read: if true;
+      allow write: if isSignedIn();
     }
 
-    /**
-     * @description Rules for certifications belonging to a portfolio.
-     * @path /users/{userId}/portfolio/certifications/{certificationId}
-     * @allow (create) if authenticated UID matches path and data link matches path.
-     */
-    match /users/{userId}/portfolio/certifications/{certificationId} {
-      allow get, list: if true;
-      allow create: if isOwner(userId) && request.resource.data.userPortfolioId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userPortfolioId == resource.data.userPortfolioId;
-      allow delete: if isExistingOwner(userId);
+    match /experience/{id} {
+      allow read: if true;
+      allow write: if isSignedIn();
     }
 
-    /**
-     * @description Rules for work experience entries.
-     * @path /users/{userId}/portfolio/workExperience/{workExperienceId}
-     * @allow (update) only if existing owner and userPortfolioId is immutable.
-     */
-    match /users/{userId}/portfolio/workExperience/{workExperienceId} {
-      allow get, list: if true;
-      allow create: if isOwner(userId) && request.resource.data.userPortfolioId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userPortfolioId == resource.data.userPortfolioId;
-      allow delete: if isExistingOwner(userId);
+    match /education/{id} {
+      allow read: if true;
+      allow write: if isSignedIn();
     }
 
-    /**
-     * @description Rules for grouping individual skills into categories.
-     * @path /users/{userId}/portfolio/skillCategories/{skillCategoryId}
-     */
-    match /users/{userId}/portfolio/skillCategories/{skillCategoryId} {
-      allow get, list: if true;
-      allow create: if isOwner(userId) && request.resource.data.userPortfolioId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userPortfolioId == resource.data.userPortfolioId;
-      allow delete: if isExistingOwner(userId);
-
-      /**
-       * @description Deeply nested individual skills.
-       * @path /users/{userId}/portfolio/skillCategories/{skillCategoryId}/skills/{skillId}
-       * @principle Secures nested resources using top-level path wildcards.
-       */
-      match /skills/{skillId} {
-        allow get, list: if true;
-        allow create: if isOwner(userId) && request.resource.data.skillCategoryId == skillCategoryId;
-        allow update: if isExistingOwner(userId) && request.resource.data.skillCategoryId == resource.data.skillCategoryId;
-        allow delete: if isExistingOwner(userId);
-      }
+    match /certifications/{id} {
+      allow read: if true;
+      allow write: if isSignedIn();
     }
 
-    /**
-     * @description Rules for showcase projects.
-     * @path /users/{userId}/portfolio/projects/{projectId}
-     * @allow (list) for everyone to enable public portfolio viewing.
-     */
-    match /users/{userId}/portfolio/projects/{projectId} {
-      allow get, list: if true;
-      allow create: if isOwner(userId) && request.resource.data.userPortfolioId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userPortfolioId == resource.data.userPortfolioId;
-      allow delete: if isExistingOwner(userId);
+    // Support for the legacy hierarchical structure if needed
+    match /users/{userId}/portfolio/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.uid == userId;
     }
   }
 }
