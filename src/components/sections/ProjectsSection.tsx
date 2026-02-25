@@ -8,12 +8,13 @@ import { ArrowUpRight, Github, PlusCircle, Edit, Trash2, Loader2, Database } fro
 import Link from 'next/link';
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { seedProjects, addProject, updateProject, deleteProject, type Project } from '@/firebase/firestore/projects';
 import { useToast } from '@/hooks/use-toast';
 import ProjectFormDialog from '../ProjectFormDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { useMemoFirebase } from '@/hooks/use-memo-firebase';
+import { portfolioContent } from '@/lib/data';
 
 const ProjectsSection = () => {
   const { user, loading: userLoading } = useUser();
@@ -24,11 +25,24 @@ const ProjectsSection = () => {
     firestore ? collection(firestore, 'projects') : null
   , [firestore]);
   
-  const { data: projects, loading: projectsLoading } = useCollection<Project>(projectsQuery);
+  const { data: firestoreProjects, loading: projectsLoading } = useCollection<Project>(projectsQuery);
 
   const [isSeeding, setIsSeeding] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  // Use Firestore projects if they exist, otherwise fall back to static data
+  const projects = useMemo(() => {
+    if (firestoreProjects && firestoreProjects.length > 0) {
+      return firestoreProjects;
+    }
+    // Return static projects mapped to the Project type structure
+    return portfolioContent.projects.map((p, i) => ({
+      ...p,
+      id: `static-${i}`,
+      ownerId: 'static-content',
+    } as Project));
+  }, [firestoreProjects]);
 
   const handleSeedProjects = async () => {
     if (!firestore || !user) return;
@@ -37,7 +51,7 @@ const ProjectsSection = () => {
       await seedProjects(firestore, user.uid);
       toast({
         title: 'Success',
-        description: 'Initial projects have been added to the database.',
+        description: 'Initial projects have been added to your database.',
       });
     } catch (error: any) {
       toast({
@@ -69,18 +83,19 @@ const ProjectsSection = () => {
   const handleFormSubmit = (data: Omit<Project, 'id' | 'ownerId'>) => {
     if (!firestore || !user) return;
 
-    if (selectedProject) {
-      // Update
+    if (selectedProject && !selectedProject.id.startsWith('static-')) {
+      // Update existing Firestore project
       updateProject(firestore, selectedProject.id, data);
       toast({ title: 'Success', description: 'Project updated.'});
     } else {
-      // Create
+      // Create new Firestore project
       addProject(firestore, user.uid, data);
-      toast({ title: 'Success', description: 'Project added.' });
+      toast({ title: 'Success', description: 'Project added to database.' });
     }
   };
 
   const isLoading = userLoading || projectsLoading;
+  const isDbEmpty = !projectsLoading && (!firestoreProjects || firestoreProjects.length === 0);
 
   return (
     <>
@@ -89,8 +104,8 @@ const ProjectsSection = () => {
           <div className="flex justify-center items-center gap-4">
             <h2 className="font-headline text-3xl md:text-4xl font-bold text-primary">Projects</h2>
             {user && (
-              <Button size="icon" variant="outline" onClick={handleAddClick}>
-                <PlusCircle />
+              <Button size="icon" variant="outline" onClick={handleAddClick} title="Add Project">
+                <PlusCircle className="h-5 w-5" />
                 <span className="sr-only">Add Project</span>
               </Button>
             )}
@@ -98,36 +113,35 @@ const ProjectsSection = () => {
           <p className="mt-2 text-lg text-muted-foreground">A selection of my work demonstrating my skills.</p>
         </div>
 
-        {isLoading && (
-          <div className="flex justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
+        {isLoading && !firestoreProjects && (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
 
-        {!isLoading && projects && projects.length === 0 && (
-          <div className="text-center max-w-lg mx-auto">
-            <p>No projects found in the database.</p>
-            {user && (
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Database/> Seed Initial Data</CardTitle>
-                  <CardDescription>
-                    Your projects database is empty. You can seed it with the initial projects from the portfolio template.
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <Button onClick={handleSeedProjects} disabled={isSeeding}>
-                    {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                    Seed Projects
-                  </Button>
-                </CardFooter>
-              </Card>
-            )}
+        {user && isDbEmpty && (
+          <div className="max-w-2xl mx-auto mb-12">
+            <Card className="border-dashed border-2 bg-primary/5">
+              <CardHeader className="text-center">
+                <CardTitle className="flex items-center justify-center gap-2 text-primary">
+                  <Database className="h-5 w-5"/> Database Setup
+                </CardTitle>
+                <CardDescription>
+                  You are currently viewing static projects. Click below to move them to your live database so you can edit or delete them.
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="justify-center">
+                <Button onClick={handleSeedProjects} disabled={isSeeding} variant="default">
+                  {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Database className="mr-2 h-4 w-4"/>}
+                  Seed Database with Projects
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {projects && projects.map((project) => (
+          {projects.map((project) => (
             <Card key={project.id} className="flex flex-col bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-colors duration-300">
               <CardHeader>
                 <CardTitle className="font-headline text-2xl">{project.projectTitle}</CardTitle>
@@ -152,13 +166,15 @@ const ProjectsSection = () => {
                 </div>
               </CardContent>
               <CardFooter className="justify-between">
-                {project.projectLink && (
-                  <Button asChild variant="ghost" className="text-primary hover:text-primary px-0">
-                      <Link href={project.projectLink} target="_blank" rel="noopener noreferrer">
-                          <Github className="mr-2 h-4 w-4" /> View on GitHub <ArrowUpRight className="ml-2 h-4 w-4" />
-                      </Link>
-                  </Button>
-                )}
+                <div>
+                  {project.projectLink && (
+                    <Button asChild variant="ghost" className="text-primary hover:text-primary px-0">
+                        <Link href={project.projectLink} target="_blank" rel="noopener noreferrer">
+                            <Github className="mr-2 h-4 w-4" /> View on GitHub <ArrowUpRight className="ml-2 h-4 w-4" />
+                        </Link>
+                    </Button>
+                  )}
+                </div>
                 {user && user.uid === project.ownerId && (
                   <div className="flex gap-2">
                     <Button variant="outline" size="icon" onClick={() => handleEditClick(project)}>
@@ -178,7 +194,7 @@ const ProjectsSection = () => {
                           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                           <AlertDialogDescription>
                             This action cannot be undone. This will permanently delete the project
-                            from the database.
+                            from your live database.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -189,7 +205,6 @@ const ProjectsSection = () => {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-
                   </div>
                 )}
               </CardFooter>
