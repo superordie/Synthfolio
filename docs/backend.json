@@ -1,203 +1,391 @@
-
 {
   "entities": {
-    "Project": {
-      "title": "Project",
-      "description": "A portfolio project.",
+    "UserPortfolio": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserPortfolio",
       "type": "object",
+      "description": "Represents the core profile, 'About Me' information, and contact details for the portfolio owner.",
       "properties": {
-        "projectTitle": {
+        "id": {
           "type": "string",
-          "description": "The title of the project."
+          "description": "Unique identifier for the UserPortfolio entity."
         },
-        "projectPurposeProblemSolved": {
+        "currentRoleFocus": {
           "type": "string",
-          "description": "A description of the project's purpose and the problem it solves."
+          "description": "The user's current role or primary professional focus, used to generate the 'About Me' section."
         },
-        "toolsOrTechnologiesUsed": {
+        "fieldsOfInterest": {
           "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "List of tools or technologies used."
-        },
-        "skillsDemonstrated": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "List of skills demonstrated in the project."
-        },
-        "projectLink": {
-          "type": "string",
-          "format": "uri",
-          "description": "A URL link to the project."
-        },
-        "ownerId": {
-          "type": "string",
-          "description": "The UID of the user who owns this project."
-        }
-      },
-      "required": [
-        "projectTitle",
-        "projectPurposeProblemSolved",
-        "toolsOrTechnologiesUsed",
-        "skillsDemonstrated",
-        "ownerId"
-      ]
-    },
-    "SkillCategory": {
-      "title": "Skill Category",
-      "description": "A category of skills (e.g., Technical Skills).",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "skills": {
-          "type": "array",
+          "description": "A list of technical or professional fields the user is interested in, used to generate the 'About Me' section.",
           "items": {
             "type": "string"
           }
         },
-        "ownerId": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "title",
-        "skills",
-        "ownerId"
-      ]
-    },
-    "Experience": {
-      "title": "Experience",
-      "description": "A work history entry.",
-      "type": "object",
-      "properties": {
-        "jobTitleRole": {
-          "type": "string"
+        "shortTermGoal": {
+          "type": "string",
+          "description": "The user's short-term professional aspiration, used to generate the 'About Me' section."
         },
-        "organizationCompany": {
-          "type": "string"
+        "longTermGoal": {
+          "type": "string",
+          "description": "The user's long-term career objective, used to generate the 'About Me' section."
         },
-        "datesOfInvolvement": {
-          "type": "string"
+        "generatedAboutMeContent": {
+          "type": "string",
+          "description": "The polished, AI-generated 'About Me' text based on the user's background and goals. This content is displayed publicly."
         },
-        "keyResponsibilities": {
+        "professionalEmail": {
+          "type": "string",
+          "description": "The professional email address for contact and collaboration.",
+          "format": "email"
+        },
+        "linkedinUrl": {
+          "type": "string",
+          "description": "URL to the user's LinkedIn profile.",
+          "format": "uri"
+        },
+        "githubUrl": {
+          "type": "string",
+          "description": "URL to the user's GitHub profile.",
+          "format": "uri"
+        },
+        "otherRelevantLinks": {
           "type": "array",
+          "description": "An array of other relevant professional links, such as a personal website or other portfolios.",
           "items": {
             "type": "string"
           }
-        },
-        "ownerId": {
-          "type": "string"
         }
       },
       "required": [
-        "jobTitleRole",
-        "organizationCompany",
-        "datesOfInvolvement",
-        "keyResponsibilities",
-        "ownerId"
+        "id",
+        "currentRoleFocus",
+        "fieldsOfInterest",
+        "shortTermGoal",
+        "longTermGoal",
+        "generatedAboutMeContent",
+        "professionalEmail",
+        "linkedinUrl",
+        "githubUrl"
       ]
     },
-    "Education": {
-      "title": "Education",
-      "description": "An academic history entry.",
+    "EducationEntry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "EducationEntry",
       "type": "object",
+      "description": "Details about a single educational program or degree completed or in progress by the user.",
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the EducationEntry entity."
+        },
+        "userPortfolioId": {
+          "type": "string",
+          "description": "Reference to the UserPortfolio this education entry belongs to. (Relationship: UserPortfolio 1:N EducationEntry)"
+        },
         "degreeProgramName": {
-          "type": "string"
+          "type": "string",
+          "description": "The name of the degree or program obtained or pursued."
         },
         "institutionName": {
-          "type": "string"
+          "type": "string",
+          "description": "The name of the educational institution."
         },
         "completionDate": {
-          "type": "string"
+          "type": "string",
+          "description": "The date (or expected date) of completion for the degree or program (e.g., '2028-03').",
+          "format": "date"
         },
-        "relevantCourseworkOrFocusAreas": {
+        "focusAreas": {
           "type": "array",
+          "description": "A list of relevant coursework or focus areas within the program.",
           "items": {
             "type": "string"
           }
-        },
-        "ownerId": {
-          "type": "string"
         }
       },
       "required": [
+        "id",
+        "userPortfolioId",
         "degreeProgramName",
         "institutionName",
-        "completionDate",
-        "ownerId"
+        "completionDate"
       ]
     },
     "Certification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Certification",
-      "description": "A professional certification.",
       "type": "object",
+      "description": "Details about a professional certification earned by the user.",
       "properties": {
-        "certificationName": {
-          "type": "string"
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Certification entity."
+        },
+        "userPortfolioId": {
+          "type": "string",
+          "description": "Reference to the UserPortfolio this certification belongs to. (Relationship: UserPortfolio 1:N Certification)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the certification."
         },
         "issuingOrganization": {
-          "type": "string"
+          "type": "string",
+          "description": "The organization that issued the certification."
         },
         "yearEarned": {
-          "type": "string"
+          "type": "number",
+          "description": "The year the certification was earned."
         },
-        "credentialURL": {
+        "credentialUrl": {
           "type": "string",
+          "description": "An optional URL to verify the credential.",
           "format": "uri"
-        },
-        "ownerId": {
-          "type": "string"
         }
       },
       "required": [
-        "certificationName",
+        "id",
+        "userPortfolioId",
+        "name",
         "issuingOrganization",
-        "yearEarned",
-        "ownerId"
+        "yearEarned"
+      ]
+    },
+    "WorkExperience": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WorkExperience",
+      "type": "object",
+      "description": "Details about a past or current professional role or project-based experience.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the WorkExperience entity."
+        },
+        "userPortfolioId": {
+          "type": "string",
+          "description": "Reference to the UserPortfolio this work experience belongs to. (Relationship: UserPortfolio 1:N WorkExperience)"
+        },
+        "jobTitle": {
+          "type": "string",
+          "description": "The title of the job or role."
+        },
+        "organizationCompany": {
+          "type": "string",
+          "description": "The name of the organization or company."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "The start date of involvement in the role (e.g., '2022-03').",
+          "format": "date"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "The end date of involvement in the role, or empty if it's a current role (e.g., '2024-07').",
+          "format": "date"
+        },
+        "responsibilities": {
+          "type": "array",
+          "description": "A list of key responsibilities and accomplishments in this role.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "userPortfolioId",
+        "jobTitle",
+        "organizationCompany",
+        "startDate",
+        "responsibilities"
+      ]
+    },
+    "SkillCategory": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SkillCategory",
+      "type": "object",
+      "description": "A category for grouping related skills (e.g., 'Technical Skills', 'Tools & Technologies', 'Professional / Soft Skills').",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SkillCategory entity."
+        },
+        "userPortfolioId": {
+          "type": "string",
+          "description": "Reference to the UserPortfolio this skill category belongs to. (Relationship: UserPortfolio 1:N SkillCategory)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the skill category (e.g., 'Technical Skills', 'Tools & Technologies', 'Professional / Soft Skills')."
+        },
+        "displayOrder": {
+          "type": "number",
+          "description": "A numeric value to control the display order of skill categories."
+        }
+      },
+      "required": [
+        "id",
+        "userPortfolioId",
+        "name",
+        "displayOrder"
+      ]
+    },
+    "Skill": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Skill",
+      "type": "object",
+      "description": "An individual skill possessed by the user, categorized under a SkillCategory.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Skill entity."
+        },
+        "skillCategoryId": {
+          "type": "string",
+          "description": "Reference to the SkillCategory this skill belongs to. (Relationship: SkillCategory 1:N Skill)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the skill."
+        }
+      },
+      "required": [
+        "id",
+        "skillCategoryId",
+        "name"
+      ]
+    },
+    "Project": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Project",
+      "type": "object",
+      "description": "Details about a specific project completed by the user, showcasing their skills and experience.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Project entity."
+        },
+        "userPortfolioId": {
+          "type": "string",
+          "description": "Reference to the UserPortfolio this project belongs to. (Relationship: UserPortfolio 1:N Project)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the project."
+        },
+        "purposeProblemSolved": {
+          "type": "string",
+          "description": "A description of the project's purpose or the problem it aimed to solve."
+        },
+        "toolsTechnologiesUsed": {
+          "type": "array",
+          "description": "A list of tools or technologies utilized in the project.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skillsDemonstrated": {
+          "type": "array",
+          "description": "A list of skills demonstrated through the completion of the project.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "projectLink": {
+          "type": "string",
+          "description": "A URL to the project's repository (e.g., GitHub) or a live demo.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "userPortfolioId",
+        "title",
+        "purposeProblemSolved",
+        "toolsTechnologiesUsed",
+        "skillsDemonstrated"
       ]
     }
   },
   "auth": {
     "providers": [
-      "google"
+      "password",
+      "anonymous"
     ]
   },
   "firestore": {
-    "/projects/{projectId}": {
-      "schema": {
-        "$ref": "#/backend/entities/Project"
+    "structure": [
+      {
+        "path": "/users/{userId}/portfolio",
+        "definition": {
+          "entityName": "UserPortfolio",
+          "schema": {
+            "$ref": "#/backend/entities/UserPortfolio"
+          },
+          "description": "Stores the core 'About Me' and contact information for a specific user's portfolio. The '{userId}' in the path identifies the owner of this portfolio, who has exclusive write access. Includes implicitly denormalized 'ownerId' for authorization independence. Publicly readable."
+        }
       },
-      "description": "Collection of portfolio projects."
-    },
-    "/skills/{skillId}": {
-      "schema": {
-        "$ref": "#/backend/entities/SkillCategory"
+      {
+        "path": "/users/{userId}/portfolio/education/{educationEntryId}",
+        "definition": {
+          "entityName": "EducationEntry",
+          "schema": {
+            "$ref": "#/backend/entities/EducationEntry"
+          },
+          "description": "Collection of education entries belonging to the user specified by '{userId}'. The '{userId}' in the path determines write access for the owner. Publicly readable. Includes denormalized 'userPortfolioId' for data consistency and query capabilities."
+        }
       },
-      "description": "Collection of skill categories."
-    },
-    "/experience/{expId}": {
-      "schema": {
-        "$ref": "#/backend/entities/Experience"
+      {
+        "path": "/users/{userId}/portfolio/certifications/{certificationId}",
+        "definition": {
+          "entityName": "Certification",
+          "schema": {
+            "$ref": "#/backend/entities/Certification"
+          },
+          "description": "Collection of certifications belonging to the user specified by '{userId}'. The '{userId}' in the path determines write access for the owner. Publicly readable. Includes denormalized 'userPortfolioId' for data consistency and query capabilities."
+        }
       },
-      "description": "Collection of work experience."
-    },
-    "/education/{eduId}": {
-      "schema": {
-        "$ref": "#/backend/entities/Education"
+      {
+        "path": "/users/{userId}/portfolio/workExperience/{workExperienceId}",
+        "definition": {
+          "entityName": "WorkExperience",
+          "schema": {
+            "$ref": "#/backend/entities/WorkExperience"
+          },
+          "description": "Collection of work experience entries belonging to the user specified by '{userId}'. The '{userId}' in the path determines write access for the owner. Publicly readable. Includes denormalized 'userPortfolioId' for data consistency and query capabilities."
+        }
       },
-      "description": "Collection of education history."
-    },
-    "/certifications/{certId}": {
-      "schema": {
-        "$ref": "#/backend/entities/Certification"
+      {
+        "path": "/users/{userId}/portfolio/skillCategories/{skillCategoryId}",
+        "definition": {
+          "entityName": "SkillCategory",
+          "schema": {
+            "$ref": "#/backend/entities/SkillCategory"
+          },
+          "description": "Collection of skill categories belonging to the user specified by '{userId}'. The '{userId}' in the path determines write access for the owner. Publicly readable. Includes denormalized 'userPortfolioId' for data consistency and query capabilities."
+        }
       },
-      "description": "Collection of professional certifications."
-    }
+      {
+        "path": "/users/{userId}/portfolio/skillCategories/{skillCategoryId}/skills/{skillId}",
+        "definition": {
+          "entityName": "Skill",
+          "schema": {
+            "$ref": "#/backend/entities/Skill"
+          },
+          "description": "Subcollection of individual skills nested under a specific skill category. Write access is determined by the '{userId}' in the parent path. Publicly readable. Includes denormalized 'skillCategoryId' for data consistency and query capabilities."
+        }
+      },
+      {
+        "path": "/users/{userId}/portfolio/projects/{projectId}",
+        "definition": {
+          "entityName": "Project",
+          "schema": {
+            "$ref": "#/backend/entities/Project"
+          },
+          "description": "Collection of projects belonging to the user specified by '{userId}'. The '{userId}' in the path determines write access for the owner. Publicly readable. Includes denormalized 'userPortfolioId' for data consistency and query capabilities."
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure for the Synthfolio application prioritizes secure, scalable, and debuggable access for a single portfolio owner, while enabling public read access for visitors. The core strategy is based on **path-based ownership** and **structural segregation**, ensuring that all documents related to a single user's portfolio are nested under their unique identifier.\n\n**Authorization Independence via Denormalization:**\nAll portfolio content, including the main `UserPortfolio` document and its related subcollections (Education, Certifications, Work Experience, Skills, Projects), is nested under a path `/users/{userId}/portfolio/...`. This design implicitly denormalizes the 'ownerId' into the path itself. For any write operation (create, update, delete) across the entire portfolio structure, Firestore security rules can directly compare `request.auth.uid` with the `{userId}` wildcard in the path. This eliminates the need for `get()` operations within security rules to check parent documents for ownership, thereby making authorization checks atomic, highly performant, and independent of other document reads. For example, to modify a `Skill` document at `/users/{userId}/portfolio/skillCategories/{skillCategoryId}/skills/{skillId}`, the rule only needs to verify `request.auth.uid == userId`, without needing to fetch the `SkillCategory` or `UserPortfolio` documents. This directly addresses the 'Authorization Independence' principle.\n\n**QAPs (Rules are not Filters):**\nThis structure robustly supports Query-Accessible Permissions (QAPs) for both read and write operations:\n*   **Public Read Access:** The security rules will permit read operations (`list`, `get`) on any document under `/users/{userId}/portfolio/...` for *any* user, including unauthenticated ones (`request.auth == null`). This means that when a public visitor queries a collection like `/users/{ownerId}/portfolio/projects`, they will receive all documents within that collection without the rules attempting to filter results based on their identity. This ensures that the application doesn't rely on security rules to filter data, which is inefficient and insecure. The data is either entirely readable or not, based on the path.\n*   **Owner-Only Write Access:** For `create`, `update`, and `delete` operations, the rules will strictly enforce `request.auth.uid == userId`. This allows only the authenticated portfolio owner to modify their content. This separation of read (public) and write (owner-only) permissions is clearly enforced by the rules, making them simple, explicit, and debuggable.\n\n**Other Principles Applied:**\n*   **Structural Segregation:** All documents within a given collection (e.g., `/users/{userId}/portfolio/education`) share the same security posture (owner write, public read). There is no mixing of public and private data within the same collection. If private drafts were needed, they would reside in a separate collection (e.g., `/users/{userId}/drafts`).\n*   **Access Modeling:** The design uses 'Hierarchical Paths for User-Owned Data' extensively, rooting all content under `/users/{userId}`, which is the most secure and straightforward pattern for single-owner data. Nested data continues this hierarchy.\n*   **DBAC:** The owner's `uid` directly grants administrative rights for their specific portfolio without needing complex role documents, satisfying the DBAC principle for this single-owner scenario. Should the need for more complex roles arise, dedicated `/roles_admin/{uid}` collections would be introduced.\n\nThis design effectively balances the user's requirement for a simple 'admin mode' (implemented securely via Firebase Auth and path-based rules) with public viewability, while strictly adhering to the core design principles for Firestore architecture."
   }
 }
