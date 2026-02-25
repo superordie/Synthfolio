@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Project": {
@@ -44,6 +45,122 @@
         "skillsDemonstrated",
         "ownerId"
       ]
+    },
+    "SkillCategory": {
+      "title": "Skill Category",
+      "description": "A category of skills (e.g., Technical Skills).",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ownerId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "skills",
+        "ownerId"
+      ]
+    },
+    "Experience": {
+      "title": "Experience",
+      "description": "A work history entry.",
+      "type": "object",
+      "properties": {
+        "jobTitleRole": {
+          "type": "string"
+        },
+        "organizationCompany": {
+          "type": "string"
+        },
+        "datesOfInvolvement": {
+          "type": "string"
+        },
+        "keyResponsibilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ownerId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "jobTitleRole",
+        "organizationCompany",
+        "datesOfInvolvement",
+        "keyResponsibilities",
+        "ownerId"
+      ]
+    },
+    "Education": {
+      "title": "Education",
+      "description": "An academic history entry.",
+      "type": "object",
+      "properties": {
+        "degreeProgramName": {
+          "type": "string"
+        },
+        "institutionName": {
+          "type": "string"
+        },
+        "completionDate": {
+          "type": "string"
+        },
+        "relevantCourseworkOrFocusAreas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ownerId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "degreeProgramName",
+        "institutionName",
+        "completionDate",
+        "ownerId"
+      ]
+    },
+    "Certification": {
+      "title": "Certification",
+      "description": "A professional certification.",
+      "type": "object",
+      "properties": {
+        "certificationName": {
+          "type": "string"
+        },
+        "issuingOrganization": {
+          "type": "string"
+        },
+        "yearEarned": {
+          "type": "string"
+        },
+        "credentialURL": {
+          "type": "string",
+          "format": "uri"
+        },
+        "ownerId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "certificationName",
+        "issuingOrganization",
+        "yearEarned",
+        "ownerId"
+      ]
     }
   },
   "auth": {
@@ -57,6 +174,30 @@
         "$ref": "#/backend/entities/Project"
       },
       "description": "Collection of portfolio projects."
+    },
+    "/skills/{skillId}": {
+      "schema": {
+        "$ref": "#/backend/entities/SkillCategory"
+      },
+      "description": "Collection of skill categories."
+    },
+    "/experience/{expId}": {
+      "schema": {
+        "$ref": "#/backend/entities/Experience"
+      },
+      "description": "Collection of work experience."
+    },
+    "/education/{eduId}": {
+      "schema": {
+        "$ref": "#/backend/entities/Education"
+      },
+      "description": "Collection of education history."
+    },
+    "/certifications/{certId}": {
+      "schema": {
+        "$ref": "#/backend/entities/Certification"
+      },
+      "description": "Collection of professional certifications."
     }
   }
 }
