@@ -1,11 +1,13 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Code2, Menu } from 'lucide-react';
+import { Code2, Menu, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { portfolioData } from '@/lib/data';
+import { useAdmin } from '@/hooks/use-admin';
 import {
   Sheet,
   SheetContent,
@@ -23,6 +25,7 @@ const navLinks = [
 
 const Header = () => {
   const [hasScrolled, setHasScrolled] = useState(false);
+  const { isAdmin } = useAdmin();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,8 +46,9 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2 group">
             <Code2 className="h-6 w-6 text-primary transition-transform group-hover:rotate-12" />
-            <span className="font-headline font-bold text-lg text-foreground">
+            <span className="font-headline font-bold text-lg text-foreground flex items-center gap-2">
               {portfolioData.name}
+              {isAdmin && <ShieldCheck className="h-4 w-4 text-primary animate-pulse" />}
             </span>
           </Link>
 
@@ -54,6 +58,11 @@ const Header = () => {
                 <Link href={link.href}>{link.label}</Link>
               </Button>
             ))}
+            {isAdmin && (
+              <Button variant="outline" asChild className="border-primary/50 text-primary hover:bg-primary/10 ml-2">
+                <Link href="/admin">Admin Panel</Link>
+              </Button>
+            )}
              <Button asChild>
                 <Link href="#contact">Contact Me</Link>
             </Button>
@@ -76,6 +85,13 @@ const Header = () => {
                       </Link>
                     </SheetClose>
                   ))}
+                  {isAdmin && (
+                    <SheetClose asChild>
+                      <Link href="/admin" className="text-lg text-primary font-semibold">
+                        Admin Panel
+                      </Link>
+                    </SheetClose>
+                  )}
                   <SheetClose asChild>
                     <Button asChild className="mt-4">
                       <Link href="#contact">Contact Me</Link>
