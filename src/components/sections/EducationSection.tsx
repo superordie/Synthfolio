@@ -16,7 +16,7 @@ const EducationSection = () => {
   const firestore = useFirestore();
 
   const eduQuery = useMemoFirebase(() => {
-    return query(collection(firestore, 'users', USER_ID, 'education'), orderBy('createdAt', 'desc'));
+    return query(collection(firestore, 'users', USER_ID, 'portfolio', 'content', 'education'), orderBy('createdAt', 'desc'));
   }, [firestore]);
   const { data: liveEdu } = useCollection(eduQuery);
 
@@ -47,14 +47,7 @@ const EducationSection = () => {
                 <h3 className="font-semibold text-lg">{edu.degreeProgramName}</h3>
                 <p className="text-muted-foreground">{edu.institutionName}</p>
                 <p className="text-sm text-muted-foreground">Completed: {edu.completionDate}</p>
-                {edu.relevantCourseworkOrFocusAreas && edu.relevantCourseworkOrFocusAreas.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {edu.relevantCourseworkOrFocusAreas.map((course: string) => (
-                      <Badge key={course} variant="outline" className="text-[10px]">{course}</Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
+              </div >
             ))}
           </CardContent>
         </Card>

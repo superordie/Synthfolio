@@ -9,19 +9,17 @@ import Link from 'next/link';
 import { portfolioContent } from '@/lib/data';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
-import type { Project } from '@/firebase/firestore/projects';
 
 const USER_ID = 'russell-robbins';
 
 const ProjectsSection = () => {
   const firestore = useFirestore();
 
-  // Fetch live projects from updated path: users/russell-robbins/projects
   const projectsQuery = useMemoFirebase(() => {
-    return query(collection(firestore, 'users', USER_ID, 'projects'), orderBy('projectTitle', 'asc'));
+    return query(collection(firestore, 'users', USER_ID, 'portfolio', 'content', 'projects'), orderBy('createdAt', 'desc'));
   }, [firestore]);
 
-  const { data: liveProjects } = useCollection<Project>(projectsQuery);
+  const { data: liveProjects } = useCollection(projectsQuery);
 
   const displayedProjects = (liveProjects && liveProjects.length > 0) 
     ? liveProjects 

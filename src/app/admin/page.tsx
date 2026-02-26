@@ -21,8 +21,7 @@ import {
   Layers,
   Briefcase,
   GraduationCap,
-  X,
-  ChevronDown
+  X
 } from 'lucide-react';
 import { db } from '@/firebase/config';
 import { collection, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
@@ -48,14 +47,12 @@ export default function AdminDashboard() {
   const { isAdmin, login, logout } = useAdmin();
   const { toast } = useToast();
 
-  // CMS State
   const [hero, setHero] = useState({ name: '', title: '', about: '' });
   const [projects, setProjects] = useState<any[]>([]);
   const [skillCategories, setSkillCategories] = useState<any[]>([]);
   const [experience, setExperience] = useState<any[]>([]);
   const [education, setEducation] = useState<any[]>([]);
   
-  // Editing states (forms)
   const [editingProject, setEditingProject] = useState<any | null>(null);
   const [editingExp, setEditingExp] = useState<any | null>(null);
   const [editingEdu, setEditingEdu] = useState<any | null>(null);
@@ -64,7 +61,6 @@ export default function AdminDashboard() {
 
   const ADMIN_PASSWORD = 'Li0nMast3r';
 
-  // Real-time Data Fetching
   useEffect(() => {
     if (!isAdmin) return;
 
@@ -72,19 +68,19 @@ export default function AdminDashboard() {
       if (doc.exists()) setHero(doc.data() as any);
     });
 
-    const unsubProjects = onSnapshot(query(collection(db, 'users', USER_ID, 'projects'), orderBy('createdAt', 'desc')), (snapshot) => {
+    const unsubProjects = onSnapshot(query(collection(db, 'users', USER_ID, 'portfolio', 'content', 'projects'), orderBy('createdAt', 'desc')), (snapshot) => {
       setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
-    const unsubSkills = onSnapshot(query(collection(db, 'users', USER_ID, 'skills'), orderBy('createdAt', 'asc')), (snapshot) => {
+    const unsubSkills = onSnapshot(query(collection(db, 'users', USER_ID, 'portfolio', 'content', 'skills'), orderBy('createdAt', 'asc')), (snapshot) => {
       setSkillCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
-    const unsubExp = onSnapshot(query(collection(db, 'users', USER_ID, 'experience'), orderBy('createdAt', 'desc')), (snapshot) => {
+    const unsubExp = onSnapshot(query(collection(db, 'users', USER_ID, 'portfolio', 'content', 'experience'), orderBy('createdAt', 'desc')), (snapshot) => {
       setExperience(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
-    const unsubEdu = onSnapshot(query(collection(db, 'users', USER_ID, 'education'), orderBy('createdAt', 'desc')), (snapshot) => {
+    const unsubEdu = onSnapshot(query(collection(db, 'users', USER_ID, 'portfolio', 'content', 'education'), orderBy('createdAt', 'desc')), (snapshot) => {
       setEducation(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
@@ -103,14 +99,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleHeroUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    const res = await updateHeroInfo(hero);
-    setIsLoading(false);
-    if (res.success) toast({ title: "Hero Updated" });
-  };
-
   const handleSave = async (data: any, action: Function, setEditor: Function, title: string) => {
     setIsLoading(true);
     const res = await action(data);
@@ -118,6 +106,8 @@ export default function AdminDashboard() {
     if (res.success) {
       toast({ title: `${title} Saved` });
       setEditor(null);
+    } else {
+      toast({ title: "Error", description: res.error, variant: "destructive" });
     }
   };
 
@@ -130,7 +120,6 @@ export default function AdminDashboard() {
   const handleAddSkillToCategory = async (cat: any) => {
     const skillName = newSkillNames[cat.id];
     if (!skillName?.trim()) return;
-    
     const updatedSkills = [...(cat.skills || []), skillName.trim()];
     const res = await saveSkillCategory({ ...cat, skills: updatedSkills });
     if (res.success) {
@@ -196,23 +185,23 @@ export default function AdminDashboard() {
             <Card className="bg-slate-900 border-white/10 text-white shadow-lg">
               <CardHeader><CardTitle>Core Identity</CardTitle></CardHeader>
               <CardContent>
-                <form onSubmit={handleHeroUpdate} className="space-y-6">
+                <form onSubmit={(e) => { e.preventDefault(); handleSave(hero, updateHeroInfo, () => {}, 'Hero'); }} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs uppercase font-bold text-muted-foreground">Full Name</label>
-                      <Input placeholder="Full Name" value={hero.name} onChange={(e) => setHero({...hero, name: e.target.value})} className="bg-slate-800 border-slate-700" />
+                      <Input value={hero.name} onChange={(e) => setHero({...hero, name: e.target.value})} className="bg-slate-800 border-slate-700" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs uppercase font-bold text-muted-foreground">Professional Title</label>
-                      <Input placeholder="Title" value={hero.title} onChange={(e) => setHero({...hero, title: e.target.value})} className="bg-slate-800 border-slate-700" />
+                      <Input value={hero.title} onChange={(e) => setHero({...hero, title: e.target.value})} className="bg-slate-800 border-slate-700" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs uppercase font-bold text-muted-foreground">About Me Summary</label>
-                    <Textarea rows={10} placeholder="About Me" value={hero.about} onChange={(e) => setHero({...hero, about: e.target.value})} className="bg-slate-800 border-slate-700" />
+                    <Textarea rows={10} value={hero.about} onChange={(e) => setHero({...hero, about: e.target.value})} className="bg-slate-800 border-slate-700" />
                   </div>
                   <Button type="submit" disabled={isLoading} className="gap-2">
-                    {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />} Save Hero Content
+                    {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />} Save Bio
                   </Button>
                 </form>
               </CardContent>
@@ -231,12 +220,12 @@ export default function AdminDashboard() {
               <Card className="bg-slate-900 border-primary/50 text-white">
                 <CardHeader><CardTitle>{editingProject.id ? 'Edit' : 'Create'} Project</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <Input placeholder="Project Title" value={editingProject.projectTitle} onChange={(e) => setEditingProject({...editingProject, projectTitle: e.target.value})} className="bg-slate-800" />
-                  <Textarea placeholder="What problem did this solve?" value={editingProject.projectPurposeProblemSolved} onChange={(e) => setEditingProject({...editingProject, projectPurposeProblemSolved: e.target.value})} className="bg-slate-800" />
-                  <Input placeholder="Tech Stack (comma separated)" value={editingProject.toolsOrTechnologiesUsed?.join(', ')} onChange={(e) => setEditingProject({...editingProject, toolsOrTechnologiesUsed: e.target.value.split(',').map(s => s.trim())})} className="bg-slate-800" />
-                  <Input placeholder="GitHub/Source Link" value={editingProject.projectLink} onChange={(e) => setEditingProject({...editingProject, projectLink: e.target.value})} className="bg-slate-800" />
+                  <Input placeholder="Title" value={editingProject.projectTitle} onChange={(e) => setEditingProject({...editingProject, projectTitle: e.target.value})} className="bg-slate-800" />
+                  <Textarea placeholder="Summary" value={editingProject.projectPurposeProblemSolved} onChange={(e) => setEditingProject({...editingProject, projectPurposeProblemSolved: e.target.value})} className="bg-slate-800" />
+                  <Input placeholder="Tech (csv)" value={editingProject.toolsOrTechnologiesUsed?.join(', ')} onChange={(e) => setEditingProject({...editingProject, toolsOrTechnologiesUsed: e.target.value.split(',').map(s => s.trim())})} className="bg-slate-800" />
+                  <Input placeholder="Link" value={editingProject.projectLink} onChange={(e) => setEditingProject({...editingProject, projectLink: e.target.value})} className="bg-slate-800" />
                   <div className="flex gap-2">
-                    <Button onClick={() => handleSave(editingProject, saveProject, setEditingProject, 'Project')}>Save Changes</Button>
+                    <Button onClick={() => handleSave(editingProject, saveProject, setEditingProject, 'Project')}>Save</Button>
                     <Button variant="ghost" onClick={() => setEditingProject(null)}>Cancel</Button>
                   </div>
                 </CardContent>
@@ -245,18 +234,14 @@ export default function AdminDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {projects.map(p => (
-                <Card key={p.id} className="bg-slate-900 border-white/5 hover:border-white/20 transition-all shadow-md">
+                <Card key={p.id} className="bg-slate-900 border-white/5">
                   <CardHeader>
                     <CardTitle className="text-xl">{p.projectTitle}</CardTitle>
-                    <CardDescription className="line-clamp-2 text-slate-400">{p.projectPurposeProblemSolved}</CardDescription>
+                    <CardDescription className="line-clamp-2">{p.projectPurposeProblemSolved}</CardDescription>
                   </CardHeader>
                   <CardContent className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setEditingProject(p)} className="gap-1">
-                      <Edit className="h-3 w-3" /> Edit
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(p.id, deleteProjectAction, 'Project')} className="gap-1">
-                      <Trash className="h-3 w-3" /> Delete
-                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setEditingProject(p)}><Edit className="h-3 w-3 mr-1" /> Edit</Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(p.id, deleteProjectAction, 'Project')}><Trash className="h-3 w-3 mr-1" /> Delete</Button>
                   </CardContent>
                 </Card>
               ))}
@@ -265,19 +250,17 @@ export default function AdminDashboard() {
 
           <TabsContent value="skills" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold font-headline">Skills & Categories</h2>
-              <Button onClick={() => setEditingCat({ title: '', skills: [] })} className="gap-2">
-                <Plus className="h-4 w-4" /> Add Category
-              </Button>
+              <h2 className="text-2xl font-bold font-headline">Skills Management</h2>
+              <Button onClick={() => setEditingCat({ title: '', skills: [] })} className="gap-2"><Plus className="h-4 w-4" /> Add Category</Button>
             </div>
             
             {editingCat && (
               <Card className="bg-slate-900 border-primary/50 text-white mb-6">
-                <CardHeader><CardTitle>New Skill Category</CardTitle></CardHeader>
+                <CardHeader><CardTitle>New Category</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <Input placeholder="Category Title (e.g. Frontend)" value={editingCat.title} onChange={(e) => setEditingCat({...editingCat, title: e.target.value})} className="bg-slate-800" />
+                  <Input placeholder="Category Title" value={editingCat.title} onChange={(e) => setEditingCat({...editingCat, title: e.target.value})} className="bg-slate-800" />
                   <div className="flex gap-2">
-                    <Button onClick={() => handleSave(editingCat, saveSkillCategory, setEditingCat, 'Category')}>Create Category</Button>
+                    <Button onClick={() => handleSave(editingCat, saveSkillCategory, setEditingCat, 'Category')}>Save</Button>
                     <Button variant="ghost" onClick={() => setEditingCat(null)}>Cancel</Button>
                   </div>
                 </CardContent>
@@ -287,40 +270,32 @@ export default function AdminDashboard() {
             <Accordion type="single" collapsible className="space-y-4">
               {skillCategories.map(cat => (
                 <AccordionItem key={cat.id} value={cat.id} className="bg-slate-900 border border-white/10 rounded-lg px-4">
-                  <AccordionTrigger className="hover:no-underline">
+                  <AccordionTrigger>
                     <div className="flex items-center gap-4 w-full">
-                      <span className="font-bold text-lg">{cat.title}</span>
+                      <span className="font-bold">{cat.title}</span>
                       <Badge variant="outline" className="ml-auto mr-4">{cat.skills?.length || 0} Skills</Badge>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="pt-4 pb-6 space-y-6">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-4">
+                  <AccordionContent className="pt-4 space-y-4">
+                    <div className="flex gap-2">
                       <Input 
-                        placeholder="Add a skill to this category..." 
+                        placeholder="Add skill..." 
                         value={newSkillNames[cat.id] || ''} 
                         onChange={(e) => setNewSkillNames(prev => ({ ...prev, [cat.id]: e.target.value }))}
                         className="bg-slate-800"
                       />
-                      <Button onClick={() => handleAddSkillToCategory(cat)} size="sm" className="gap-2">
-                        <Plus className="h-4 w-4" /> Add
-                      </Button>
+                      <Button onClick={() => handleAddSkillToCategory(cat)} size="sm">Add</Button>
                     </div>
-
                     <div className="flex flex-wrap gap-2">
-                      {cat.skills?.map((skill: string) => (
-                        <Badge key={skill} variant="secondary" className="bg-slate-800 py-1 px-3 flex items-center gap-2">
-                          {skill}
-                          <button onClick={() => handleRemoveSkillFromCategory(cat, skill)} className="text-slate-500 hover:text-destructive">
-                            <X className="h-3 w-3" />
-                          </button>
+                      {cat.skills?.map((s: string) => (
+                        <Badge key={s} variant="secondary" className="flex gap-2">
+                          {s}
+                          <button onClick={() => handleRemoveSkillFromCategory(cat, s)}><X className="h-3 w-3" /></button>
                         </Badge>
                       ))}
                     </div>
-
-                    <div className="flex justify-end gap-2 pt-4 border-t border-white/5">
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(cat.id, deleteSkillCategoryAction, 'Category')} className="gap-2">
-                        <Trash className="h-4 w-4" /> Delete Entire Category
-                      </Button>
+                    <div className="flex justify-end pt-4">
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(cat.id, deleteSkillCategoryAction, 'Category')}><Trash className="h-4 w-4 mr-1" /> Delete Category</Button>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -330,32 +305,25 @@ export default function AdminDashboard() {
 
           <TabsContent value="experience" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold font-headline">Work Experience</h2>
-              <Button onClick={() => setEditingExp({ jobTitleRole: '', organizationCompany: '', datesOfInvolvement: '', keyResponsibilities: [] })} className="gap-2">
-                <Plus className="h-4 w-4" /> Add Experience
-              </Button>
+              <h2 className="text-2xl font-bold font-headline">Experience</h2>
+              <Button onClick={() => setEditingExp({ jobTitleRole: '', organizationCompany: '', datesOfInvolvement: '', keyResponsibilities: [] })}><Plus className="h-4 w-4 mr-1" /> Add</Button>
             </div>
-
             {editingExp && (
               <Card className="bg-slate-900 border-primary/50 p-6 space-y-4">
                 <Input placeholder="Job Title" value={editingExp.jobTitleRole} onChange={(e) => setEditingExp({...editingExp, jobTitleRole: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Company / Organization" value={editingExp.organizationCompany} onChange={(e) => setEditingExp({...editingExp, organizationCompany: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Dates (e.g. 2022 - Present)" value={editingExp.datesOfInvolvement} onChange={(e) => setEditingExp({...editingExp, datesOfInvolvement: e.target.value})} className="bg-slate-800" />
-                <Textarea placeholder="Responsibilities (one per line)" value={editingExp.keyResponsibilities?.join('\n')} onChange={(e) => setEditingExp({...editingExp, keyResponsibilities: e.target.value.split('\n')})} className="bg-slate-800" rows={5} />
+                <Input placeholder="Company" value={editingExp.organizationCompany} onChange={(e) => setEditingExp({...editingExp, organizationCompany: e.target.value})} className="bg-slate-800" />
+                <Input placeholder="Dates" value={editingExp.datesOfInvolvement} onChange={(e) => setEditingExp({...editingExp, datesOfInvolvement: e.target.value})} className="bg-slate-800" />
+                <Textarea placeholder="Responsibilities (newline)" value={editingExp.keyResponsibilities?.join('\n')} onChange={(e) => setEditingExp({...editingExp, keyResponsibilities: e.target.value.split('\n')})} className="bg-slate-800" />
                 <div className="flex gap-2">
                   <Button onClick={() => handleSave(editingExp, saveExperience, setEditingExp, 'Experience')}>Save</Button>
                   <Button variant="ghost" onClick={() => setEditingExp(null)}>Cancel</Button>
                 </div>
               </Card>
             )}
-
             <div className="space-y-4">
               {experience.map(e => (
                 <Card key={e.id} className="bg-slate-900 border-white/5 p-4 flex justify-between items-center">
-                  <div>
-                    <h3 className="font-bold">{e.jobTitleRole}</h3>
-                    <p className="text-sm text-slate-400">{e.organizationCompany} | {e.datesOfInvolvement}</p>
-                  </div>
+                  <div><h3 className="font-bold">{e.jobTitleRole}</h3><p className="text-sm text-slate-400">{e.organizationCompany}</p></div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="icon" onClick={() => setEditingExp(e)}><Edit className="h-4 w-4" /></Button>
                     <Button variant="destructive" size="icon" onClick={() => handleDelete(e.id, deleteExperienceAction, 'Experience')}><Trash className="h-4 w-4" /></Button>
@@ -368,31 +336,23 @@ export default function AdminDashboard() {
           <TabsContent value="education" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold font-headline">Education</h2>
-              <Button onClick={() => setEditingEdu({ degreeProgramName: '', institutionName: '', completionDate: '', relevantCourseworkOrFocusAreas: [] })} className="gap-2">
-                <Plus className="h-4 w-4" /> Add Education
-              </Button>
+              <Button onClick={() => setEditingEdu({ degreeProgramName: '', institutionName: '', completionDate: '', relevantCourseworkOrFocusAreas: [] })}><Plus className="h-4 w-4 mr-1" /> Add</Button>
             </div>
-
             {editingEdu && (
               <Card className="bg-slate-900 border-primary/50 p-6 space-y-4">
-                <Input placeholder="Degree / Program" value={editingEdu.degreeProgramName} onChange={(e) => setEditingEdu({...editingEdu, degreeProgramName: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Institution Name" value={editingEdu.institutionName} onChange={(e) => setEditingEdu({...editingEdu, institutionName: e.target.value})} className="bg-slate-800" />
+                <Input placeholder="Degree" value={editingEdu.degreeProgramName} onChange={(e) => setEditingEdu({...editingEdu, degreeProgramName: e.target.value})} className="bg-slate-800" />
+                <Input placeholder="Institution" value={editingEdu.institutionName} onChange={(e) => setEditingEdu({...editingEdu, institutionName: e.target.value})} className="bg-slate-800" />
                 <Input placeholder="Completion Date" value={editingEdu.completionDate} onChange={(e) => setEditingEdu({...editingEdu, completionDate: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Relevant Coursework (comma separated)" value={editingEdu.relevantCourseworkOrFocusAreas?.join(', ')} onChange={(e) => setEditingEdu({...editingEdu, relevantCourseworkOrFocusAreas: e.target.value.split(',').map(s => s.trim())})} className="bg-slate-800" />
                 <div className="flex gap-2">
                   <Button onClick={() => handleSave(editingEdu, saveEducation, setEditingEdu, 'Education')}>Save</Button>
                   <Button variant="ghost" onClick={() => setEditingEdu(null)}>Cancel</Button>
                 </div>
               </Card>
             )}
-
             <div className="space-y-4">
               {education.map(e => (
                 <Card key={e.id} className="bg-slate-900 border-white/5 p-4 flex justify-between items-center">
-                  <div>
-                    <h3 className="font-bold">{e.degreeProgramName}</h3>
-                    <p className="text-sm text-slate-400">{e.institutionName} | {e.completionDate}</p>
-                  </div>
+                  <div><h3 className="font-bold">{e.degreeProgramName}</h3><p className="text-sm text-slate-400">{e.institutionName}</p></div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="icon" onClick={() => setEditingEdu(e)}><Edit className="h-4 w-4" /></Button>
                     <Button variant="destructive" size="icon" onClick={() => handleDelete(e.id, deleteEducationAction, 'Education')}><Trash className="h-4 w-4" /></Button>

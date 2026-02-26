@@ -12,14 +12,12 @@ const USER_ID = 'russell-robbins';
 const SkillsSection = () => {
   const firestore = useFirestore();
 
-  // Fetch live skill categories
   const skillsQuery = useMemoFirebase(() => {
-    return query(collection(firestore, 'users', USER_ID, 'skills'), orderBy('createdAt', 'asc'));
+    return query(collection(firestore, 'users', USER_ID, 'portfolio', 'content', 'skills'), orderBy('createdAt', 'asc'));
   }, [firestore]);
 
-  const { data: liveCategories } = useCollection<{ title: string; skills: string[] }>(skillsQuery);
+  const { data: liveCategories } = useCollection(skillsQuery);
 
-  // Fallback static structure
   const staticCategories = [
     { title: 'Technical Skills', skills: portfolioContent.skills.technicalSkills },
     { title: 'Tools & Technologies', skills: portfolioContent.skills.toolsAndTechnologies },

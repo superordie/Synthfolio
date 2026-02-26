@@ -17,7 +17,14 @@ import { portfolioContent as staticContent } from '@/lib/data';
 const USER_ID = 'russell-robbins';
 
 /**
- * Updates the Hero/Bio information in Firestore.
+ * Paths are structured to follow the odd/even segment rules of Firestore.
+ * Collection: users/{userId}/portfolio/content/{type} (5 segments)
+ */
+const getCollPath = (type: string) => collection(db, 'users', USER_ID, 'portfolio', 'content', type);
+const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'portfolio', 'content', type, id);
+
+/**
+ * Updates the Hero/Bio information.
  */
 export async function updateHeroInfo(data: { name: string; title: string; about: string }) {
   try {
@@ -26,62 +33,54 @@ export async function updateHeroInfo(data: { name: string; title: string; about:
       ...data,
       updatedAt: new Date().toISOString() 
     }, { merge: true });
-
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message || "Failed to update hero info." };
+    return { success: false, error: error.message };
   }
 }
 
 /**
- * Saves or updates a project in Firestore.
+ * Projects CRUD
  */
 export async function saveProject(project: any) {
   try {
-    const colRef = collection(db, 'users', USER_ID, 'projects');
-    
     if (project.id) {
-      const docRef = doc(db, 'users', USER_ID, 'projects', project.id);
+      const docRef = getDocPath('projects', project.id);
       const { id, ...data } = project;
       await updateDoc(docRef, data);
     } else {
+      const colRef = getCollPath('projects');
       await addDoc(colRef, {
         ...project,
         createdAt: new Date().toISOString()
       });
     }
-
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message || "Failed to save project." };
+    return { success: false, error: error.message };
   }
 }
 
-/**
- * Deletes a project from Firestore.
- */
 export async function deleteProjectAction(projectId: string) {
   try {
-    const docRef = doc(db, 'users', USER_ID, 'projects', projectId);
-    await deleteDoc(docRef);
+    await deleteDoc(getDocPath('projects', projectId));
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message || "Failed to delete project." };
+    return { success: false, error: error.message };
   }
 }
 
 /**
- * Saves or updates an Experience entry.
+ * Experience CRUD
  */
 export async function saveExperience(exp: any) {
   try {
-    const colRef = collection(db, 'users', USER_ID, 'experience');
     if (exp.id) {
-      const docRef = doc(db, 'users', USER_ID, 'experience', exp.id);
+      const docRef = getDocPath('experience', exp.id);
       const { id, ...data } = exp;
       await updateDoc(docRef, data);
     } else {
-      await addDoc(colRef, { ...exp, createdAt: new Date().toISOString() });
+      await addDoc(getCollPath('experience'), { ...exp, createdAt: new Date().toISOString() });
     }
     return { success: true };
   } catch (error: any) {
@@ -89,13 +88,9 @@ export async function saveExperience(exp: any) {
   }
 }
 
-/**
- * Deletes an Experience entry.
- */
 export async function deleteExperienceAction(id: string) {
   try {
-    const docRef = doc(db, 'users', USER_ID, 'experience', id);
-    await deleteDoc(docRef);
+    await deleteDoc(getDocPath('experience', id));
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -103,17 +98,16 @@ export async function deleteExperienceAction(id: string) {
 }
 
 /**
- * Saves or updates an Education entry.
+ * Education CRUD
  */
 export async function saveEducation(edu: any) {
   try {
-    const colRef = collection(db, 'users', USER_ID, 'education');
     if (edu.id) {
-      const docRef = doc(db, 'users', USER_ID, 'education', edu.id);
+      const docRef = getDocPath('education', edu.id);
       const { id, ...data } = edu;
       await updateDoc(docRef, data);
     } else {
-      await addDoc(colRef, { ...edu, createdAt: new Date().toISOString() });
+      await addDoc(getCollPath('education'), { ...edu, createdAt: new Date().toISOString() });
     }
     return { success: true };
   } catch (error: any) {
@@ -121,13 +115,9 @@ export async function saveEducation(edu: any) {
   }
 }
 
-/**
- * Deletes an Education entry.
- */
 export async function deleteEducationAction(id: string) {
   try {
-    const docRef = doc(db, 'users', USER_ID, 'education', id);
-    await deleteDoc(docRef);
+    await deleteDoc(getDocPath('education', id));
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -135,33 +125,26 @@ export async function deleteEducationAction(id: string) {
 }
 
 /**
- * Saves or updates a skill category.
+ * Skills CRUD
  */
-export async function saveSkillCategory(category: { id?: string; title: string; skills: string[] }) {
+export async function saveSkillCategory(category: any) {
   try {
-    const colRef = collection(db, 'users', USER_ID, 'skills');
-    
     if (category.id) {
-      const docRef = doc(db, 'users', USER_ID, 'skills', category.id);
+      const docRef = getDocPath('skills', category.id);
       const { id, ...data } = category;
       await updateDoc(docRef, data);
     } else {
-      await addDoc(colRef, { ...category, createdAt: new Date().toISOString() });
+      await addDoc(getCollPath('skills'), { ...category, createdAt: new Date().toISOString() });
     }
-
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message || "Failed to save skill category." };
+    return { success: false, error: error.message };
   }
 }
 
-/**
- * Deletes a skill category.
- */
-export async function deleteSkillCategoryAction(categoryId: string) {
+export async function deleteSkillCategoryAction(id: string) {
   try {
-    const docRef = doc(db, 'users', USER_ID, 'skills', categoryId);
-    await deleteDoc(docRef);
+    await deleteDoc(getDocPath('skills', id));
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -169,15 +152,15 @@ export async function deleteSkillCategoryAction(categoryId: string) {
 }
 
 /**
- * AI Aligner Action: Fetches portfolio data and runs the Genkit flow.
+ * AI Aligner
  */
 export async function alignWithJobDescription(jobDescription: string) {
   try {
     const bioSnap = await getDoc(doc(db, 'users', USER_ID, 'portfolio', 'bio'));
-    const projectsSnap = await getDocs(collection(db, 'users', USER_ID, 'projects'));
-    const skillsSnap = await getDocs(collection(db, 'users', USER_ID, 'skills'));
-    const expSnap = await getDocs(collection(db, 'users', USER_ID, 'experience'));
-    const eduSnap = await getDocs(collection(db, 'users', USER_ID, 'education'));
+    const projectsSnap = await getDocs(getCollPath('projects'));
+    const skillsSnap = await getDocs(getCollPath('skills'));
+    const expSnap = await getDocs(getCollPath('experience'));
+    const eduSnap = await getDocs(getCollPath('education'));
 
     const liveProjects = projectsSnap.docs.map(d => d.data());
     const liveSkillsDocs = skillsSnap.docs.map(d => d.data());
@@ -219,15 +202,9 @@ export async function alignWithJobDescription(jobDescription: string) {
       }
     };
 
-    const result = await jobDescriptionSkillHighlighter(input);
-    return result;
+    return await jobDescriptionSkillHighlighter(input);
 
   } catch (error: any) {
-    console.error('AI Aligner Error:', error);
-    return { 
-      matchedSkills: [], 
-      matchedProjects: [], 
-      error: error.message || 'Failed to analyze job description.' 
-    };
+    return { matchedSkills: [], matchedProjects: [], error: error.message };
   }
 }

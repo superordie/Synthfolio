@@ -12,7 +12,7 @@ const ExperienceSection = () => {
   const firestore = useFirestore();
 
   const expQuery = useMemoFirebase(() => {
-    return query(collection(firestore, 'users', USER_ID, 'experience'), orderBy('createdAt', 'desc'));
+    return query(collection(firestore, 'users', USER_ID, 'portfolio', 'content', 'experience'), orderBy('createdAt', 'desc'));
   }, [firestore]);
   const { data: liveExp } = useCollection(expQuery);
 
