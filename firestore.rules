@@ -3,16 +3,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 1. GLOBAL ACCESS
-    // Allows everyone to see your portfolio content and allows you to manage it.
+    // 1. GLOBAL ACCESS for Russell Robbins
+    // Recursively allow access to the Russell Robbins root path.
     match /users/russell-robbins/{document=**} {
       allow read, list: if true;
-      // In production, you'd use: allow write: if request.auth != null;
-      // Keeping it 'true' temporarily to ensure your restoration button works immediately.
+      // In production, restrict write to authenticated admin.
+      // Keeping broad for initial setup and restoration.
       allow write: if true; 
     }
 
-    // 2. LEGACY BIO PATH (for backward compatibility if needed)
+    // Explicit support for the Bio path
     match /users/russell-robbins/portfolio/bio {
       allow read, write: if true;
     }

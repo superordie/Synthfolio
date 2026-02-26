@@ -15,8 +15,9 @@ const USER_ID = 'russell-robbins';
 const ProjectsSection = () => {
   const firestore = useFirestore();
 
+  // Unified 5-segment path
   const projectsQuery = useMemoFirebase(() => {
-    return query(collection(firestore, 'users', USER_ID, 'portfolio', 'content', 'projects'), orderBy('createdAt', 'desc'));
+    return query(collection(firestore, 'users', USER_ID, 'portfolio', 'content', 'projects'));
   }, [firestore]);
 
   const { data: liveProjects } = useCollection(projectsQuery);

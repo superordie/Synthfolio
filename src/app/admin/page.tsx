@@ -69,26 +69,26 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isAdmin) return;
 
-    // Listeners for 5-segment collection paths
+    // Listeners for standardized 5-segment paths
     const unsubHero = onSnapshot(doc(db, 'users', USER_ID, 'portfolio', 'bio'), (doc) => {
       if (doc.exists()) setHero(doc.data() as any);
     });
 
-    const unsubProjects = onSnapshot(query(collection(db, 'users', USER_ID, 'portfolio', 'content', 'projects'), orderBy('createdAt', 'desc')), (snapshot) => {
+    const unsubProjects = onSnapshot(collection(db, 'users', USER_ID, 'portfolio', 'content', 'projects'), (snapshot) => {
       setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
+    }, (error) => console.error("Projects Listener Error:", error));
 
-    const unsubSkills = onSnapshot(query(collection(db, 'users', USER_ID, 'portfolio', 'content', 'skills'), orderBy('createdAt', 'asc')), (snapshot) => {
+    const unsubSkills = onSnapshot(collection(db, 'users', USER_ID, 'portfolio', 'content', 'skills'), (snapshot) => {
       setSkillCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
+    }, (error) => console.error("Skills Listener Error:", error));
 
-    const unsubExp = onSnapshot(query(collection(db, 'users', USER_ID, 'portfolio', 'content', 'experience'), orderBy('createdAt', 'desc')), (snapshot) => {
+    const unsubExp = onSnapshot(collection(db, 'users', USER_ID, 'portfolio', 'content', 'experience'), (snapshot) => {
       setExperience(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
+    }, (error) => console.error("Experience Listener Error:", error));
 
-    const unsubEdu = onSnapshot(query(collection(db, 'users', USER_ID, 'portfolio', 'content', 'education'), orderBy('createdAt', 'desc')), (snapshot) => {
+    const unsubEdu = onSnapshot(collection(db, 'users', USER_ID, 'portfolio', 'content', 'education'), (snapshot) => {
       setEducation(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
+    }, (error) => console.error("Education Listener Error:", error));
 
     return () => {
       unsubHero(); unsubProjects(); unsubSkills(); unsubExp(); unsubEdu();

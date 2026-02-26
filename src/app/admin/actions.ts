@@ -9,7 +9,9 @@ import {
   deleteDoc, 
   updateDoc,
   getDoc,
-  getDocs
+  getDocs,
+  query,
+  orderBy
 } from 'firebase/firestore';
 import { jobDescriptionSkillHighlighter } from '@/ai/flows/job-description-skill-highlighter';
 import { portfolioContent as staticContent, portfolioData as staticBio } from '@/lib/data';
@@ -18,6 +20,7 @@ const USER_ID = 'russell-robbins';
 
 /**
  * Standardized path: users/russell-robbins/portfolio/content/[type] (5 segments)
+ * This is the only valid way to have a "sub-folder" for a collection.
  */
 const getCollPath = (type: string) => collection(db, 'users', USER_ID, 'portfolio', 'content', type);
 const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'portfolio', 'content', type, id);
@@ -27,7 +30,7 @@ const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'port
  */
 export async function restorePortfolioData() {
   try {
-    // 1. Bio (4 segments)
+    // 1. Bio (4 segments - valid for a document)
     const bioRef = doc(db, 'users', USER_ID, 'portfolio', 'bio');
     await setDoc(bioRef, { 
       about: staticBio.about,
@@ -79,6 +82,7 @@ export async function restorePortfolioData() {
 
     return { success: true };
   } catch (error: any) {
+    console.error("Restoration Error:", error);
     return { success: false, error: error.message };
   }
 }
