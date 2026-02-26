@@ -17,17 +17,20 @@ import { portfolioContent as staticContent, portfolioData as staticBio } from '@
 const USER_ID = 'russell-robbins';
 
 /**
- * Standardized 5-segment path for collections: users/russell-robbins/portfolio/content/[type]
+ * Standardized 5-segment path for collections: 
+ * users (1) / russell-robbins (2) / portfolio (3) / content (4) / [type] (5)
+ * This satisfies Firestore's requirement for odd-segment collection paths while maintaining the "portfolio" sub-folder.
  */
 const getCollPath = (type: string) => collection(db, 'users', USER_ID, 'portfolio', 'content', type);
 const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'portfolio', 'content', type, id);
 
 /**
  * Restores all original data from lib/data.ts to Firestore collections.
+ * Uses addDoc to ensure unique IDs and prevent overwriting existing items.
  */
 export async function restorePortfolioData() {
   try {
-    // 1. Bio (4-segment document path)
+    // 1. Bio (4-segment document path - this is a single document, not a collection)
     const bioRef = doc(db, 'users', USER_ID, 'portfolio', 'bio');
     await setDoc(bioRef, { 
       about: staticBio.about,
