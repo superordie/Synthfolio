@@ -12,23 +12,31 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { jobDescriptionSkillHighlighter } from '@/ai/flows/job-description-skill-highlighter';
-import { portfolioContent as staticContent } from '@/lib/data';
+import { portfolioContent as staticContent, portfolioData as staticBio } from '@/lib/data';
 
 const USER_ID = 'russell-robbins';
 
 /**
- * Paths follow the odd segment rule for Firestore collections.
- * Path: users/{userId}/portfolio/content/{type} (5 segments)
+ * Standardized path: users/russell-robbins/portfolio/content/[type] (5 segments)
  */
 const getCollPath = (type: string) => collection(db, 'users', USER_ID, 'portfolio', 'content', type);
 const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'portfolio', 'content', type, id);
 
 /**
- * Restores original hardcoded data into the new Firestore nested paths.
+ * Safely restores all original hardcoded data to Firestore.
  */
 export async function restorePortfolioData() {
   try {
-    // 1. Projects
+    // 1. Bio (4 segments)
+    const bioRef = doc(db, 'users', USER_ID, 'portfolio', 'bio');
+    await setDoc(bioRef, { 
+      about: staticBio.about,
+      name: staticBio.name,
+      title: staticBio.title,
+      updatedAt: new Date().toISOString() 
+    }, { merge: true });
+
+    // 2. Projects
     const projectCol = getCollPath('projects');
     for (const project of staticContent.projects) {
       await addDoc(projectCol, {
@@ -37,7 +45,7 @@ export async function restorePortfolioData() {
       });
     }
 
-    // 2. Experience
+    // 3. Experience
     const expCol = getCollPath('experience');
     for (const exp of staticContent.workHistory) {
       await addDoc(expCol, {
@@ -46,7 +54,7 @@ export async function restorePortfolioData() {
       });
     }
 
-    // 3. Education
+    // 4. Education
     const eduCol = getCollPath('education');
     for (const edu of staticContent.education) {
       await addDoc(eduCol, {
@@ -55,14 +63,13 @@ export async function restorePortfolioData() {
       });
     }
 
-    // 4. Skills
+    // 5. Skills
     const skillsCol = getCollPath('skills');
     const categories = [
       { title: 'Technical Skills', skills: staticContent.skills.technicalSkills },
       { title: 'Tools & Technologies', skills: staticContent.skills.toolsAndTechnologies },
       { title: 'Professional/Soft Skills', skills: staticContent.skills.professionalSoftSkills },
     ];
-
     for (const cat of categories) {
       await addDoc(skillsCol, {
         ...cat,
@@ -76,9 +83,6 @@ export async function restorePortfolioData() {
   }
 }
 
-/**
- * Updates the Hero/Bio information (Single Document Path: 4 segments).
- */
 export async function updateHeroInfo(data: { name: string; title: string; about: string }) {
   try {
     const docRef = doc(db, 'users', USER_ID, 'portfolio', 'bio');
@@ -92,18 +96,13 @@ export async function updateHeroInfo(data: { name: string; title: string; about:
   }
 }
 
-/**
- * Projects CRUD
- */
 export async function saveProject(project: any) {
   try {
     const { id, ...data } = project;
     if (id) {
-      const docRef = getDocPath('projects', id);
-      await updateDoc(docRef, data);
+      await updateDoc(getDocPath('projects', id), data);
     } else {
-      const colRef = getCollPath('projects');
-      await addDoc(colRef, {
+      await addDoc(getCollPath('projects'), {
         ...data,
         createdAt: new Date().toISOString()
       });
@@ -123,15 +122,11 @@ export async function deleteProjectAction(projectId: string) {
   }
 }
 
-/**
- * Experience CRUD
- */
 export async function saveExperience(exp: any) {
   try {
     const { id, ...data } = exp;
     if (id) {
-      const docRef = getDocPath('experience', id);
-      await updateDoc(docRef, data);
+      await updateDoc(getDocPath('experience', id), data);
     } else {
       await addDoc(getCollPath('experience'), { 
         ...data, 
@@ -153,15 +148,11 @@ export async function deleteExperienceAction(id: string) {
   }
 }
 
-/**
- * Education CRUD
- */
 export async function saveEducation(edu: any) {
   try {
     const { id, ...data } = edu;
     if (id) {
-      const docRef = getDocPath('education', id);
-      await updateDoc(docRef, data);
+      await updateDoc(getDocPath('education', id), data);
     } else {
       await addDoc(getCollPath('education'), { 
         ...data, 
@@ -183,15 +174,11 @@ export async function deleteEducationAction(id: string) {
   }
 }
 
-/**
- * Skills CRUD
- */
 export async function saveSkillCategory(category: any) {
   try {
     const { id, ...data } = category;
     if (id) {
-      const docRef = getDocPath('skills', id);
-      await updateDoc(docRef, data);
+      await updateDoc(getDocPath('skills', id), data);
     } else {
       await addDoc(getCollPath('skills'), { 
         ...data, 
@@ -213,9 +200,6 @@ export async function deleteSkillCategoryAction(id: string) {
   }
 }
 
-/**
- * AI Aligner Logic
- */
 export async function alignWithJobDescription(jobDescription: string) {
   try {
     const bioSnap = await getDoc(doc(db, 'users', USER_ID, 'portfolio', 'bio'));
@@ -228,7 +212,7 @@ export async function alignWithJobDescription(jobDescription: string) {
     const liveSkillsDocs = skillsSnap.docs.map(d => d.data());
     const liveExp = expSnap.docs.map(d => d.data());
     const liveEdu = eduSnap.docs.map(d => d.data());
-    const liveBio = bioSnap.exists() ? bioSnap.data().about : staticContent.aboutMe;
+    const liveBio = bioSnap.exists() ? bioSnap.data().about : staticBio.about;
 
     const formattedSkills = {
       technicalSkills: liveSkillsDocs.find(d => d.title === 'Technical Skills')?.skills || staticContent.skills.technicalSkills,

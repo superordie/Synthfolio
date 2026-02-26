@@ -23,13 +23,13 @@ const ProjectsSection = () => {
 
   const displayedProjects = (liveProjects && liveProjects.length > 0) 
     ? liveProjects 
-    : portfolioContent.projects.map((p, i) => ({ ...p, id: `static-${i}` }));
+    : portfolioContent.projects.map((p, i) => ({ ...p, id: `static-p-${i}` }));
 
   return (
     <Section id="projects">
       <div className="text-center mb-12">
         <h2 className="font-headline text-3xl md:text-4xl font-bold text-primary">Featured Projects</h2>
-        <p className="mt-2 text-lg text-muted-foreground">Showcasing my technical problem-solving and development journey.</p>
+        <p className="mt-2 text-lg text-muted-foreground">Showcasing technical problem-solving and AI-driven development.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
