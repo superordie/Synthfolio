@@ -3,22 +3,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 1. GLOBAL PORTFOLIO ACCESS
-    // This allows the Admin Dashboard and the Website to see all your content.
+    // 1. GLOBAL ACCESS
+    // Allows everyone to see your portfolio content and allows you to manage it.
     match /users/russell-robbins/{document=**} {
       allow read, list: if true;
+      // In production, you'd use: allow write: if request.auth != null;
+      // Keeping it 'true' temporarily to ensure your restoration button works immediately.
+      allow write: if true; 
     }
 
-    // 2. ADMIN-ONLY WRITE ACCESS
-    // This allows the 'Save' and 'Delete' buttons to work ONLY if you are logged in.
-    match /users/russell-robbins/{collection}/{docId} {
-      allow write: if request.auth != null || true; // Temporarily 'true' to ensure you get back in, change to 'request.auth != null' after testing.
-    }
-    
-    // 3. LEGACY BIO PATH
+    // 2. LEGACY BIO PATH (for backward compatibility if needed)
     match /users/russell-robbins/portfolio/bio {
-      allow read: if true;
-      allow write: if true;
+      allow read, write: if true;
     }
   }
 }
