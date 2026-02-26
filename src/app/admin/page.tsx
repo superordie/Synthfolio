@@ -72,7 +72,7 @@ export default function AdminDashboard() {
       if (doc.exists()) setHero(doc.data() as any);
     });
 
-    // Collection Listeners
+    // Collection Listeners pointing to portfolio/content/[type]
     const unsubProjects = onSnapshot(query(collection(db, 'users', USER_ID, 'portfolio', 'content', 'projects'), orderBy('createdAt', 'desc')), (snapshot) => {
       setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
   };
 
   const handleRestore = async () => {
-    if (!confirm("This will upload all original hardcoded projects, experience, and education to Firestore. Continue?")) return;
+    if (!confirm("This will upload all original hardcoded data to the Firestore nested paths. Continue?")) return;
     
     setIsRestoring(true);
     const res = await restorePortfolioData();

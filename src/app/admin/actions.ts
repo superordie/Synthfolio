@@ -18,13 +18,13 @@ const USER_ID = 'russell-robbins';
 
 /**
  * Paths follow the odd segment rule for Firestore collections.
- * Collection: users/{userId}/portfolio/content/{type} (5 segments)
+ * Path: users/{userId}/portfolio/content/{type} (5 segments)
  */
 const getCollPath = (type: string) => collection(db, 'users', USER_ID, 'portfolio', 'content', type);
 const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'portfolio', 'content', type, id);
 
 /**
- * Restores original hardcoded data into Firestore collections.
+ * Restores original hardcoded data into the new Firestore nested paths.
  */
 export async function restorePortfolioData() {
   try {
@@ -55,7 +55,7 @@ export async function restorePortfolioData() {
       });
     }
 
-    // 4. Skills (Restoring as categories)
+    // 4. Skills
     const skillsCol = getCollPath('skills');
     const categories = [
       { title: 'Technical Skills', skills: staticContent.skills.technicalSkills },
@@ -77,7 +77,7 @@ export async function restorePortfolioData() {
 }
 
 /**
- * Updates the Hero/Bio information (Single Document).
+ * Updates the Hero/Bio information (Single Document Path: 4 segments).
  */
 export async function updateHeroInfo(data: { name: string; title: string; about: string }) {
   try {
