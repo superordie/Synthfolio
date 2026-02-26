@@ -8,20 +8,21 @@ import { ArrowUpRight, Github } from 'lucide-react';
 import Link from 'next/link';
 import { portfolioContent } from '@/lib/data';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 
 const USER_ID = 'russell-robbins';
 
 const ProjectsSection = () => {
   const firestore = useFirestore();
 
-  // Unified 5-segment path
+  // Unified 5-segment path: users/russell-robbins/portfolio/content/projects
   const projectsQuery = useMemoFirebase(() => {
     return query(collection(firestore, 'users', USER_ID, 'portfolio', 'content', 'projects'));
   }, [firestore]);
 
   const { data: liveProjects } = useCollection(projectsQuery);
 
+  // Fallback to static data if database is empty
   const displayedProjects = (liveProjects && liveProjects.length > 0) 
     ? liveProjects 
     : portfolioContent.projects.map((p, i) => ({ ...p, id: `static-p-${i}` }));

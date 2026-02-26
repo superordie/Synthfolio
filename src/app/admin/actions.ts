@@ -9,9 +9,7 @@ import {
   deleteDoc, 
   updateDoc,
   getDoc,
-  getDocs,
-  query,
-  orderBy
+  getDocs
 } from 'firebase/firestore';
 import { jobDescriptionSkillHighlighter } from '@/ai/flows/job-description-skill-highlighter';
 import { portfolioContent as staticContent, portfolioData as staticBio } from '@/lib/data';
@@ -19,18 +17,17 @@ import { portfolioContent as staticContent, portfolioData as staticBio } from '@
 const USER_ID = 'russell-robbins';
 
 /**
- * Standardized path: users/russell-robbins/portfolio/content/[type] (5 segments)
- * This is a valid Firestore collection path.
+ * Standardized 5-segment path for collections: users/russell-robbins/portfolio/content/[type]
  */
 const getCollPath = (type: string) => collection(db, 'users', USER_ID, 'portfolio', 'content', type);
 const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'portfolio', 'content', type, id);
 
 /**
- * Safely restores all original hardcoded data to Firestore.
+ * Restores all original data from lib/data.ts to Firestore collections.
  */
 export async function restorePortfolioData() {
   try {
-    // 1. Bio (4 segments - valid for a document)
+    // 1. Bio (4-segment document path)
     const bioRef = doc(db, 'users', USER_ID, 'portfolio', 'bio');
     await setDoc(bioRef, { 
       about: staticBio.about,

@@ -16,17 +16,13 @@ import {
   Trash, 
   Save, 
   Edit, 
-  User, 
   LogOut,
-  Layers,
-  Briefcase,
-  GraduationCap,
   X,
   RefreshCw,
   AlertCircle
 } from 'lucide-react';
 import { db } from '@/firebase/config';
-import { collection, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { 
   updateHeroInfo, 
   saveProject, 
@@ -69,26 +65,26 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isAdmin) return;
 
-    // Listeners for standardized 5-segment paths
+    // Standardized 5-segment path listeners
     const unsubHero = onSnapshot(doc(db, 'users', USER_ID, 'portfolio', 'bio'), (doc) => {
       if (doc.exists()) setHero(doc.data() as any);
     });
 
     const unsubProjects = onSnapshot(collection(db, 'users', USER_ID, 'portfolio', 'content', 'projects'), (snapshot) => {
       setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (error) => console.error("Projects Listener Error:", error));
+    });
 
     const unsubSkills = onSnapshot(collection(db, 'users', USER_ID, 'portfolio', 'content', 'skills'), (snapshot) => {
       setSkillCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (error) => console.error("Skills Listener Error:", error));
+    });
 
     const unsubExp = onSnapshot(collection(db, 'users', USER_ID, 'portfolio', 'content', 'experience'), (snapshot) => {
       setExperience(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (error) => console.error("Experience Listener Error:", error));
+    });
 
     const unsubEdu = onSnapshot(collection(db, 'users', USER_ID, 'portfolio', 'content', 'education'), (snapshot) => {
       setEducation(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (error) => console.error("Education Listener Error:", error));
+    });
 
     return () => {
       unsubHero(); unsubProjects(); unsubSkills(); unsubExp(); unsubEdu();
@@ -106,12 +102,12 @@ export default function AdminDashboard() {
   };
 
   const handleRestore = async () => {
-    if (!confirm("This will upload all original data to Firestore. Existing live items will be kept. Continue?")) return;
+    if (!confirm("This will restore original projects, skills, and history from your code back into the database. Existing items will be kept. Continue?")) return;
     setIsRestoring(true);
     const res = await restorePortfolioData();
     setIsRestoring(false);
     if (res.success) {
-      toast({ title: "Portfolio Restored", description: "Original data is now live." });
+      toast({ title: "Portfolio Restored", description: "Your original projects and data are now live." });
     } else {
       toast({ title: "Restoration Failed", description: res.error, variant: "destructive" });
     }
@@ -186,7 +182,7 @@ export default function AdminDashboard() {
           <div className="flex gap-2">
             <Button variant="secondary" onClick={handleRestore} disabled={isRestoring}>
               {isRestoring ? <Loader2 className="animate-spin h-4 w-4" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-              Restore Data
+              Restore Original Data
             </Button>
             <Button variant="outline" onClick={logout} className="gap-2">
               <LogOut className="h-4 w-4" /> Log Out
@@ -228,8 +224,8 @@ export default function AdminDashboard() {
             {projects.length === 0 && !editingProject && (
               <Alert className="bg-slate-900 border-primary/20">
                 <AlertCircle className="h-4 w-4 text-primary" />
-                <AlertTitle>No projects found</AlertTitle>
-                <AlertDescription>Click "Restore Data" to upload your original projects or add a new one.</AlertDescription>
+                <AlertTitle>No projects found in database</AlertTitle>
+                <AlertDescription>Click "Restore Original Data" above to bring back your portfolio projects.</AlertDescription>
               </Alert>
             )}
 
@@ -271,22 +267,9 @@ export default function AdminDashboard() {
               <Button onClick={() => setEditingCat({ title: '', skills: [] })}><Plus className="h-4 w-4 mr-2" /> New Category</Button>
             </div>
 
-            {editingCat && (
-              <Card className="bg-slate-900 border-primary/50 text-white mb-4">
-                <CardHeader><CardTitle>New Category</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                  <Input placeholder="Title" value={editingCat.title} onChange={(e) => setEditingCat({...editingCat, title: e.target.value})} className="bg-slate-800" />
-                  <div className="flex gap-2">
-                    <Button onClick={() => handleSave(editingCat, saveSkillCategory, setEditingCat, 'Category')}>Save</Button>
-                    <Button variant="ghost" onClick={() => setEditingCat(null)}>Cancel</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <Accordion type="single" collapsible className="space-y-2">
-              {skillCategories.map(cat => (
-                <AccordionItem key={cat.id} value={cat.id} className="bg-slate-900 border-white/5 px-4 rounded-lg">
+            {skillCategories.map(cat => (
+              <Accordion type="single" collapsible className="space-y-2" key={cat.id}>
+                <AccordionItem value={cat.id} className="bg-slate-900 border-white/5 px-4 rounded-lg">
                   <AccordionTrigger className="hover:no-underline py-4">
                     <div className="flex items-center gap-4">
                       <span className="font-bold">{cat.title}</span>
@@ -315,8 +298,8 @@ export default function AdminDashboard() {
                     </div>
                   </AccordionContent>
                 </AccordionItem>
-              ))}
-            </Accordion>
+              </Accordion>
+            ))}
           </TabsContent>
 
           <TabsContent value="experience" className="space-y-6">
@@ -326,18 +309,6 @@ export default function AdminDashboard() {
                 <Plus className="h-4 w-4 mr-2" /> New Entry
               </Button>
             </div>
-            {editingExp && (
-              <Card className="bg-slate-900 border-primary/50 p-4 space-y-4">
-                <Input placeholder="Role" value={editingExp.jobTitleRole} onChange={(e) => setEditingExp({...editingExp, jobTitleRole: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Company" value={editingExp.organizationCompany} onChange={(e) => setEditingExp({...editingExp, organizationCompany: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Dates" value={editingExp.datesOfInvolvement} onChange={(e) => setEditingExp({...editingExp, datesOfInvolvement: e.target.value})} className="bg-slate-800" />
-                <Textarea placeholder="Responsibilities (newline)" value={editingExp.keyResponsibilities?.join('\n')} onChange={(e) => setEditingExp({...editingExp, keyResponsibilities: e.target.value.split('\n')})} className="bg-slate-800" />
-                <div className="flex gap-2">
-                  <Button onClick={() => handleSave(editingExp, saveExperience, setEditingExp, 'Experience')}>Save</Button>
-                  <Button variant="ghost" onClick={() => setEditingExp(null)}>Cancel</Button>
-                </div>
-              </Card>
-            )}
             <div className="space-y-4">
               {experience.map(e => (
                 <Card key={e.id} className="bg-slate-900 border-white/5 p-4 flex justify-between items-center">
@@ -361,17 +332,6 @@ export default function AdminDashboard() {
                 <Plus className="h-4 w-4 mr-2" /> New Entry
               </Button>
             </div>
-            {editingEdu && (
-              <Card className="bg-slate-900 border-primary/50 p-4 space-y-4">
-                <Input placeholder="Degree" value={editingEdu.degreeProgramName} onChange={(e) => setEditingEdu({...editingEdu, degreeProgramName: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Institution" value={editingEdu.institutionName} onChange={(e) => setEditingEdu({...editingEdu, institutionName: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Date" value={editingEdu.completionDate} onChange={(e) => setEditingEdu({...editingEdu, completionDate: e.target.value})} className="bg-slate-800" />
-                <div className="flex gap-2">
-                  <Button onClick={() => handleSave(editingEdu, saveEducation, setEditingEdu, 'Education')}>Save</Button>
-                  <Button variant="ghost" onClick={() => setEditingEdu(null)}>Cancel</Button>
-                </div>
-              </Card>
-            )}
             <div className="space-y-4">
               {education.map(e => (
                 <Card key={e.id} className="bg-slate-900 border-white/5 p-4 flex justify-between items-center">
