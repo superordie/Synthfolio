@@ -17,11 +17,64 @@ import { portfolioContent as staticContent } from '@/lib/data';
 const USER_ID = 'russell-robbins';
 
 /**
- * Paths are structured to follow the odd/even segment rules of Firestore.
+ * Paths follow the odd segment rule for Firestore collections.
  * Collection: users/{userId}/portfolio/content/{type} (5 segments)
  */
 const getCollPath = (type: string) => collection(db, 'users', USER_ID, 'portfolio', 'content', type);
 const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'portfolio', 'content', type, id);
+
+/**
+ * Restores original hardcoded data into Firestore collections.
+ */
+export async function restorePortfolioData() {
+  try {
+    // 1. Projects
+    const projectCol = getCollPath('projects');
+    for (const project of staticContent.projects) {
+      await addDoc(projectCol, {
+        ...project,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    // 2. Experience
+    const expCol = getCollPath('experience');
+    for (const exp of staticContent.workHistory) {
+      await addDoc(expCol, {
+        ...exp,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    // 3. Education
+    const eduCol = getCollPath('education');
+    for (const edu of staticContent.education) {
+      await addDoc(eduCol, {
+        ...edu,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    // 4. Skills (Restoring as categories)
+    const skillsCol = getCollPath('skills');
+    const categories = [
+      { title: 'Technical Skills', skills: staticContent.skills.technicalSkills },
+      { title: 'Tools & Technologies', skills: staticContent.skills.toolsAndTechnologies },
+      { title: 'Professional/Soft Skills', skills: staticContent.skills.professionalSoftSkills },
+    ];
+
+    for (const cat of categories) {
+      await addDoc(skillsCol, {
+        ...cat,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
 
 /**
  * Updates the Hero/Bio information (Single Document).
@@ -29,7 +82,6 @@ const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'port
 export async function updateHeroInfo(data: { name: string; title: string; about: string }) {
   try {
     const docRef = doc(db, 'users', USER_ID, 'portfolio', 'bio');
-    // Using setDoc with merge for the single Bio document is appropriate
     await setDoc(docRef, { 
       ...data,
       updatedAt: new Date().toISOString() 
@@ -41,17 +93,15 @@ export async function updateHeroInfo(data: { name: string; title: string; about:
 }
 
 /**
- * Projects CRUD (Collection)
+ * Projects CRUD
  */
 export async function saveProject(project: any) {
   try {
     const { id, ...data } = project;
     if (id) {
-      // Update existing
       const docRef = getDocPath('projects', id);
       await updateDoc(docRef, data);
     } else {
-      // Add new - ensure we never use setDoc on a collection
       const colRef = getCollPath('projects');
       await addDoc(colRef, {
         ...data,
@@ -74,7 +124,7 @@ export async function deleteProjectAction(projectId: string) {
 }
 
 /**
- * Experience CRUD (Collection)
+ * Experience CRUD
  */
 export async function saveExperience(exp: any) {
   try {
@@ -104,7 +154,7 @@ export async function deleteExperienceAction(id: string) {
 }
 
 /**
- * Education CRUD (Collection)
+ * Education CRUD
  */
 export async function saveEducation(edu: any) {
   try {
@@ -134,7 +184,7 @@ export async function deleteEducationAction(id: string) {
 }
 
 /**
- * Skills CRUD (Collection)
+ * Skills CRUD
  */
 export async function saveSkillCategory(category: any) {
   try {

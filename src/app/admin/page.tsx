@@ -21,7 +21,8 @@ import {
   Layers,
   Briefcase,
   GraduationCap,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 import { db } from '@/firebase/config';
 import { collection, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
@@ -34,7 +35,8 @@ import {
   saveExperience,
   deleteExperienceAction,
   saveEducation,
-  deleteEducationAction
+  deleteEducationAction,
+  restorePortfolioData
 } from './actions';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -44,6 +46,7 @@ const USER_ID = 'russell-robbins';
 export default function AdminDashboard() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const { isAdmin, login, logout } = useAdmin();
   const { toast } = useToast();
 
@@ -64,12 +67,12 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isAdmin) return;
 
-    // Bio Listener (4-segment document)
+    // Bio Listener
     const unsubHero = onSnapshot(doc(db, 'users', USER_ID, 'portfolio', 'bio'), (doc) => {
       if (doc.exists()) setHero(doc.data() as any);
     });
 
-    // Collection Listeners (5-segment collections)
+    // Collection Listeners
     const unsubProjects = onSnapshot(query(collection(db, 'users', USER_ID, 'portfolio', 'content', 'projects'), orderBy('createdAt', 'desc')), (snapshot) => {
       setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
@@ -98,6 +101,20 @@ export default function AdminDashboard() {
       toast({ title: "Access Granted" });
     } else {
       toast({ title: "Access Denied", variant: "destructive" });
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!confirm("This will upload all original hardcoded projects, experience, and education to Firestore. Continue?")) return;
+    
+    setIsRestoring(true);
+    const res = await restorePortfolioData();
+    setIsRestoring(false);
+    
+    if (res.success) {
+      toast({ title: "Portfolio Data Restored", description: "All original content has been synced to Firestore." });
+    } else {
+      toast({ title: "Restoration Failed", description: res.error, variant: "destructive" });
     }
   };
 
@@ -169,9 +186,15 @@ export default function AdminDashboard() {
             <Unlock className="text-primary h-6 w-6" />
             <h1 className="text-3xl font-bold font-headline tracking-tight">Management Dashboard</h1>
           </div>
-          <Button variant="outline" onClick={logout} className="gap-2">
-            <LogOut className="h-4 w-4" /> Log Out
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={handleRestore} disabled={isRestoring} className="gap-2">
+              {isRestoring ? <Loader2 className="animate-spin h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
+              Restore Original Data
+            </Button>
+            <Button variant="outline" onClick={logout} className="gap-2">
+              <LogOut className="h-4 w-4" /> Log Out
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="projects" className="space-y-6">
