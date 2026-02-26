@@ -16,11 +16,9 @@ import {
   Trash, 
   Save, 
   Edit, 
-  Globe, 
-  Github, 
-  Layers, 
   User, 
-  LogOut 
+  LogOut,
+  Layers
 } from 'lucide-react';
 import { db } from '@/firebase/config';
 import { collection, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
@@ -53,20 +51,20 @@ export default function AdminCMS() {
   useEffect(() => {
     if (!isAdmin) return;
 
-    // Fetch Hero
+    // Fetch Hero (Doc - 5 segments)
     const heroRef = doc(db, 'users', USER_ID, 'portfolio', 'bio');
     const unsubHero = onSnapshot(heroRef, (doc) => {
       if (doc.exists()) setHero(doc.data() as any);
     });
 
-    // Fetch Projects
-    const projectsRef = collection(db, 'users', USER_ID, 'portfolio', 'projects');
+    // Fetch Projects (Collection - 3 segments)
+    const projectsRef = collection(db, 'users', USER_ID, 'projects');
     const unsubProjects = onSnapshot(query(projectsRef, orderBy('createdAt', 'desc')), (snapshot) => {
       setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
-    // Fetch Skills
-    const skillsRef = collection(db, 'users', USER_ID, 'portfolio', 'skillCategories');
+    // Fetch Skills (Collection - 3 segments)
+    const skillsRef = collection(db, 'users', USER_ID, 'skills');
     const unsubSkills = onSnapshot(skillsRef, (snapshot) => {
       setSkills(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
@@ -82,9 +80,9 @@ export default function AdminCMS() {
     e.preventDefault();
     if (password === ADMIN_PASSWORD) {
       login();
-      toast({ title: "Access Granted", description: "Welcome back, Russell." });
+      toast({ title: "Access Granted" });
     } else {
-      toast({ title: "Access Denied", description: "Incorrect password.", variant: "destructive" });
+      toast({ title: "Access Denied", variant: "destructive" });
     }
   };
 
@@ -93,28 +91,18 @@ export default function AdminCMS() {
     setIsLoading(true);
     const res = await updateHeroInfo(hero);
     setIsLoading(false);
-    if (res.success) toast({ title: "Success", description: "Bio updated successfully." });
-    else toast({ title: "Error", description: res.error, variant: "destructive" });
+    if (res.success) toast({ title: "Hero Updated" });
   };
 
   const handleProjectSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const data = editingProject || {};
-    const res = await saveProject(data);
+    const res = await saveProject(editingProject);
     setIsLoading(false);
     if (res.success) {
-      toast({ title: "Success", description: "Project saved." });
+      toast({ title: "Project Saved" });
       setEditingProject(null);
-    } else {
-      toast({ title: "Error", description: res.error, variant: "destructive" });
     }
-  };
-
-  const handleDeleteProject = async (id: string) => {
-    if (!confirm("Are you sure?")) return;
-    const res = await deleteProjectAction(id);
-    if (res.success) toast({ title: "Success", description: "Project deleted." });
   };
 
   if (!isAdmin) {
@@ -122,11 +110,8 @@ export default function AdminCMS() {
       <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
         <Card className="w-full max-w-md border-white/10 bg-slate-900 text-white shadow-2xl">
           <CardHeader className="text-center">
-            <div className="mx-auto bg-primary/20 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-              <Lock className="text-primary h-8 w-8" />
-            </div>
+            <Lock className="mx-auto text-primary h-8 w-8 mb-4" />
             <CardTitle className="text-2xl font-bold font-headline">Portfolio Admin</CardTitle>
-            <CardDescription className="text-slate-400">Enter your credentials to manage content.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -153,14 +138,14 @@ export default function AdminCMS() {
             <Unlock className="text-primary h-6 w-6" />
             <h1 className="text-3xl font-bold font-headline tracking-tight">Portfolio CMS</h1>
           </div>
-          <Button variant="outline" onClick={logout} className="gap-2 border-white/10 hover:bg-white/5">
+          <Button variant="outline" onClick={logout} className="gap-2">
             <LogOut className="h-4 w-4" /> Log Out
           </Button>
         </div>
 
-        <Tabs defaultValue="bio" className="space-y-6">
+        <Tabs defaultValue="projects" className="space-y-6">
           <TabsList className="bg-slate-900 border border-white/10 p-1">
-            <TabsTrigger value="bio" className="gap-2"><User className="h-4 w-4" /> Bio / Hero</TabsTrigger>
+            <TabsTrigger value="bio" className="gap-2"><User className="h-4 w-4" /> Bio</TabsTrigger>
             <TabsTrigger value="projects" className="gap-2"><Layers className="h-4 w-4" /> Projects</TabsTrigger>
             <TabsTrigger value="skills" className="gap-2"><Plus className="h-4 w-4" /> Skills</TabsTrigger>
           </TabsList>
@@ -169,7 +154,6 @@ export default function AdminCMS() {
             <Card className="bg-slate-900 border-white/10 text-white">
               <CardHeader>
                 <CardTitle>Core Identity</CardTitle>
-                <CardDescription>Update your name, title, and "About Me" summary.</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleHeroUpdate} className="space-y-6">
@@ -183,7 +167,7 @@ export default function AdminCMS() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-400">Professional Title</label>
+                      <label className="text-sm font-medium text-slate-400">Title</label>
                       <Input 
                         value={hero.title} 
                         onChange={(e) => setHero({...hero, title: e.target.value})}
@@ -197,12 +181,12 @@ export default function AdminCMS() {
                       rows={8}
                       value={hero.about} 
                       onChange={(e) => setHero({...hero, about: e.target.value})}
-                      className="bg-slate-800 border-slate-700 leading-relaxed"
+                      className="bg-slate-800 border-slate-700"
                     />
                   </div>
                   <Button type="submit" disabled={isLoading} className="gap-2">
                     {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
-                    Save Identity
+                    Save Bio
                   </Button>
                 </form>
               </CardContent>
@@ -211,9 +195,9 @@ export default function AdminCMS() {
 
           <TabsContent value="projects" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold font-headline">Projects Library</h2>
+              <h2 className="text-2xl font-bold font-headline">Projects</h2>
               <Button onClick={() => setEditingProject({ projectTitle: '', projectPurposeProblemSolved: '', toolsOrTechnologiesUsed: [], projectLink: '' })} className="gap-2">
-                <Plus className="h-4 w-4" /> New Project
+                <Plus className="h-4 w-4" /> Add Project
               </Button>
             </div>
 
@@ -225,37 +209,25 @@ export default function AdminCMS() {
                 <CardContent>
                   <form onSubmit={handleProjectSave} className="space-y-4">
                     <Input 
-                      placeholder="Project Title"
+                      placeholder="Title"
                       value={editingProject.projectTitle}
                       onChange={(e) => setEditingProject({...editingProject, projectTitle: e.target.value})}
                       className="bg-slate-800 border-slate-700"
                     />
                     <Textarea 
-                      placeholder="Description / Purpose"
+                      placeholder="Description"
                       value={editingProject.projectPurposeProblemSolved}
                       onChange={(e) => setEditingProject({...editingProject, projectPurposeProblemSolved: e.target.value})}
                       className="bg-slate-800 border-slate-700"
-                      rows={4}
                     />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <Input 
-                        placeholder="GitHub Link"
-                        value={editingProject.projectLink}
-                        onChange={(e) => setEditingProject({...editingProject, projectLink: e.target.value})}
-                        className="bg-slate-800 border-slate-700"
-                      />
-                      <Input 
-                        placeholder="Tech Stack (comma separated)"
-                        value={Array.isArray(editingProject.toolsOrTechnologiesUsed) ? editingProject.toolsOrTechnologiesUsed.join(', ') : editingProject.toolsOrTechnologiesUsed}
-                        onChange={(e) => setEditingProject({...editingProject, toolsOrTechnologiesUsed: e.target.value.split(',').map((s: string) => s.trim())})}
-                        className="bg-slate-800 border-slate-700"
-                      />
-                    </div>
+                    <Input 
+                      placeholder="Stack (comma separated)"
+                      value={editingProject.toolsOrTechnologiesUsed?.join(', ')}
+                      onChange={(e) => setEditingProject({...editingProject, toolsOrTechnologiesUsed: e.target.value.split(',').map(s => s.trim())})}
+                      className="bg-slate-800 border-slate-700"
+                    />
                     <div className="flex gap-2">
-                      <Button type="submit" disabled={isLoading} className="gap-2">
-                        {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
-                        {editingProject.id ? 'Update Project' : 'Create Project'}
-                      </Button>
+                      <Button type="submit" disabled={isLoading}>Save</Button>
                       <Button type="button" variant="ghost" onClick={() => setEditingProject(null)}>Cancel</Button>
                     </div>
                   </form>
@@ -265,24 +237,14 @@ export default function AdminCMS() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {projects.map(proj => (
-                <Card key={proj.id} className="bg-slate-900 border-white/5 hover:border-white/20 transition-all">
+                <Card key={proj.id} className="bg-slate-900 border-white/5">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                    <div>
-                      <CardTitle className="text-lg">{proj.projectTitle}</CardTitle>
-                    </div>
+                    <CardTitle className="text-lg">{proj.projectTitle}</CardTitle>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => setEditingProject(proj)}><Edit className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteProject(proj.id)}><Trash className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteProjectAction(proj.id)}><Trash className="h-4 w-4" /></Button>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-slate-400 line-clamp-2 mb-4">{proj.projectPurposeProblemSolved}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {proj.toolsOrTechnologiesUsed?.slice(0, 3).map((t: string) => (
-                        <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>
-                      ))}
-                    </div>
-                  </CardContent>
                 </Card>
               ))}
             </div>
@@ -291,50 +253,31 @@ export default function AdminCMS() {
           <TabsContent value="skills">
             <Card className="bg-slate-900 border-white/10 text-white">
               <CardHeader>
-                <CardTitle>Skills Inventory</CardTitle>
-                <CardDescription>Organize your technical and soft skills into categories.</CardDescription>
+                <CardTitle>Skills</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {skills.map(cat => (
                   <div key={cat.id} className="p-4 rounded-lg bg-slate-800/50 border border-white/5 space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold">{cat.title}</h3>
-                      <Button variant="ghost" size="sm" className="text-destructive gap-2" onClick={() => deleteSkillsCategory(cat.id)}>
-                        <Trash className="h-3 w-3" /> Remove Category
+                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => deleteSkillsCategory(cat.id)}>
+                        <Trash className="h-3 w-3" />
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {cat.skills.map((s: string, idx: number) => (
-                        <Badge key={idx} variant="outline" className="gap-1">
-                          {s}
-                        </Badge>
+                        <Badge key={idx} variant="outline">{s}</Badge>
                       ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input 
-                        placeholder="Add skill to this category..." 
-                        onKeyDown={async (e) => {
-                          if (e.key === 'Enter') {
-                            const val = (e.target as HTMLInputElement).value;
-                            if (!val) return;
-                            await updateSkillsCategory({ ...cat, skills: [...cat.skills, val] });
-                            (e.target as HTMLInputElement).value = '';
-                            toast({ title: "Skill Added" });
-                          }
-                        }}
-                        className="bg-slate-800 border-slate-700 h-8 text-xs"
-                      />
                     </div>
                   </div>
                 ))}
-
-                <Button variant="outline" className="w-full border-dashed border-white/20 hover:bg-white/5 gap-2"
+                <Button variant="outline" className="w-full border-dashed"
                   onClick={() => {
-                    const title = prompt("New Category Title?");
+                    const title = prompt("New Category?");
                     if (title) updateSkillsCategory({ title, skills: [] });
                   }}
                 >
-                  <Plus className="h-4 w-4" /> Add New Category
+                  <Plus className="h-4 w-4" /> New Category
                 </Button>
               </CardContent>
             </Card>

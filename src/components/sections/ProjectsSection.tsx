@@ -1,4 +1,3 @@
-
 'use client';
 
 import Section from '@/components/Section';
@@ -12,24 +11,25 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import type { Project } from '@/firebase/firestore/projects';
 
+const USER_ID = 'russell-robbins';
+
 const ProjectsSection = () => {
   const firestore = useFirestore();
 
-  // Fetch live projects from Firestore
+  // Fetch live projects from updated path: users/russell-robbins/projects
   const projectsQuery = useMemoFirebase(() => {
-    return query(collection(firestore, 'projects'), orderBy('projectTitle', 'asc'));
+    return query(collection(firestore, 'users', USER_ID, 'projects'), orderBy('projectTitle', 'asc'));
   }, [firestore]);
 
   const { data: liveProjects } = useCollection<Project>(projectsQuery);
 
-  // Fallback to static data if no live data is found
   const displayedProjects = (liveProjects && liveProjects.length > 0) 
     ? liveProjects 
     : portfolioContent.projects.map((p, i) => ({ ...p, id: `static-${i}` }));
 
   return (
     <Section id="projects">
-      <div className="text-center mb-12 relative">
+      <div className="text-center mb-12">
         <h2 className="font-headline text-3xl md:text-4xl font-bold text-primary">Featured Projects</h2>
         <p className="mt-2 text-lg text-muted-foreground">Showcasing my technical problem-solving and development journey.</p>
       </div>
@@ -47,23 +47,15 @@ const ProjectsSection = () => {
               <div>
                 <h4 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-2">Technologies</h4>
                 <div className="flex flex-wrap gap-2">
-                  {project.toolsOrTechnologiesUsed.map((tool: string) => (
+                  {project.toolsOrTechnologiesUsed?.map((tool: string) => (
                     <Badge key={tool} variant="secondary">{tool}</Badge>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h4 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-2">Skills Demonstrated</h4>
-                <div className="flex flex-wrap gap-2">
-                  {project.skillsDemonstrated.map((skill: string) => (
-                    <Badge key={skill} variant="outline" className="border-primary/20">{skill}</Badge>
                   ))}
                 </div>
               </div>
             </CardContent>
             <CardFooter className="pt-4">
               {project.projectLink && (
-                <Button asChild variant="ghost" className="text-primary hover:text-primary-foreground hover:bg-primary transition-colors p-0 h-auto font-semibold">
+                <Button asChild variant="ghost" className="text-primary p-0 h-auto font-semibold">
                   <Link href={project.projectLink} target="_blank" rel="noopener noreferrer" className="flex items-center">
                     <Github className="mr-2 h-4 w-4" /> View Source <ArrowUpRight className="ml-1 h-3 w-3" />
                   </Link>
