@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
-
 /**
- * A standard Next.js global error boundary.
- * It replaces the entire root layout (including <html> and <body>) when a critical error occurs.
+ * A simplified Next.js global error boundary.
+ * This file must be in the root of the app directory.
+ * It is designed to be extremely resilient to help debug root-level failures.
  */
 export default function GlobalError({
   error,
@@ -13,69 +12,57 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    // Log the error for debugging
-    console.error('Global Error Boundary caught:', error);
-  }, [error]);
-
   return (
-    <html lang="en">
+    <html>
       <body style={{
         backgroundColor: '#0a0a0a',
-        color: '#ffffff',
+        color: 'white',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '100vh',
+        minHeight: 'screen',
         margin: 0,
-        fontFamily: 'Inter, system-ui, sans-serif',
-        padding: '20px'
+        fontFamily: 'sans-serif'
       }}>
         <div style={{
-          maxWidth: '500px',
-          width: '100%',
-          textAlign: 'center',
+          maxWidth: '400px',
           padding: '40px',
+          textAlign: 'center',
+          background: 'rgba(255,255,255,0.05)',
           borderRadius: '12px',
-          backgroundColor: 'rgba(255, 255, 255, 0.03)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)'
+          border: '1px solid rgba(255,255,255,0.1)'
         }}>
-          <h1 style={{ color: '#3b82f6', fontSize: '2.5rem', fontWeight: 'bold', margin: '0 0 1rem 0' }}>Oops!</h1>
-          <p style={{ color: '#94a3b8', fontSize: '1.125rem', marginBottom: '2rem', lineHeight: '1.6' }}>
-            A critical error occurred. This is usually due to a missing configuration or a temporary connection issue.
+          <h1 style={{ color: '#3b82f6', marginBottom: '16px' }}>System Alert</h1>
+          <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
+            The application encountered a startup issue. This is often related to environment configuration.
           </p>
-          <div style={{
-            backgroundColor: '#171717',
-            border: '1px solid #262626',
-            padding: '16px',
-            borderRadius: '8px',
+          <pre style={{
+            background: 'rgba(0,0,0,0.3)',
+            padding: '12px',
+            borderRadius: '6px',
             textAlign: 'left',
-            marginBottom: '2rem',
+            fontSize: '12px',
+            color: '#f87171',
             overflow: 'auto',
             maxHeight: '200px'
           }}>
-            <code style={{ fontSize: '0.875rem', color: '#ef4444', fontFamily: 'monospace' }}>
-              {error.message || 'Unknown System Error'}
-            </code>
-          </div>
+            {error?.message || 'Unknown Initialization Error'}
+          </pre>
           <button
             onClick={() => reset()}
             style={{
               backgroundColor: '#3b82f6',
               color: 'white',
               border: 'none',
-              padding: '14px 28px',
-              borderRadius: '8px',
-              fontSize: '1rem',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              fontWeight: 'bold',
               cursor: 'pointer',
-              fontWeight: '600',
-              transition: 'background-color 0.2s'
+              width: '100%',
+              marginTop: '16px'
             }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
           >
-            Try Refreshing
+            Retry Connection
           </button>
         </div>
       </body>

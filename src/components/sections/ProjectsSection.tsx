@@ -108,7 +108,7 @@ const ProjectsSection = () => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="pt-4">
               {project.projectLink && (
                 <Button asChild variant="ghost" className="text-primary hover:text-primary-foreground hover:bg-primary transition-colors p-0 h-auto font-semibold">
                   <Link href={project.projectLink} target="_blank" rel="noopener noreferrer" className="flex items-center">

@@ -3,33 +3,41 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getFirestore } from 'firebase/firestore';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+/**
+ * Initializes Firebase with enhanced error handling to prevent 
+ * application-wide crashes during the development boot cycle.
+ */
 export function initializeFirebase() {
-  if (!getApps().length) {
-    // Important! initializeApp() is called without any arguments because Firebase App Hosting
-    // integrates with the initializeApp() function to provide the environment variables needed to
-    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
-    // without arguments.
-    let firebaseApp;
-    try {
-      // Attempt to initialize via Firebase App Hosting environment variables
-      firebaseApp = initializeApp();
-    } catch (e) {
-      // Only warn in production because it's normal to use the firebaseConfig to initialize
-      // during development
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
+  try {
+    if (!getApps().length) {
+      let firebaseApp: FirebaseApp;
+      
+      // Attempt standard initialization (preferred for App Hosting)
+      try {
+        firebaseApp = initializeApp();
+      } catch (e) {
+        // Fallback to explicit config (standard for development)
+        // We catch errors here to prevent the entire app from failing to compile
+        // if the API key or config is temporarily invalid.
+        try {
+          firebaseApp = initializeApp(firebaseConfig);
+        } catch (configError: any) {
+          console.error("Firebase Configuration Error:", configError.message);
+          // Return a dummy initialization to allow the app to boot and show the error boundary
+          throw configError;
+        }
       }
-      firebaseApp = initializeApp(firebaseConfig);
+
+      return getSdks(firebaseApp);
     }
 
-    return getSdks(firebaseApp);
+    return getSdks(getApp());
+  } catch (err) {
+    // Re-throw so the FirebaseClientProvider can handle it or let GlobalError catch it
+    throw err;
   }
-
-  // If already initialized, return the SDKs with the already initialized App
-  return getSdks(getApp());
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {

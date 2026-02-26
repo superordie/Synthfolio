@@ -80,7 +80,7 @@ const SkillsSection = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {displayedCategories.map((category) => (
-          <Card key={category.id} className="group flex flex-col bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-colors duration-300 relative">
+          <Card key={category.id} className="group flex flex-col bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-colors duration-300 relative shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-xl font-headline text-foreground">{category.title}</CardTitle>
               {isAdmin && !category.id.startsWith('static-') && (
@@ -113,7 +113,7 @@ const SkillsSection = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-7 px-2 border-dashed text-xs"
+                    className="h-7 px-2 border-dashed text-xs w-full mt-2"
                     onClick={() => handleEditCategory(category)}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Add Skill
