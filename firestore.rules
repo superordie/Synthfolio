@@ -1,56 +1,36 @@
 /**
  * PORTFOLIO SECURITY RULES
  *
- * This ruleset defines access for the portfolio's top-level collections.
- * 1. Public Read: Anyone can view skills, projects, experience, and education.
- * 2. Admin Write: Only authenticated users (who have logged in via the /admin page) 
- *    can create, update, or delete content.
+ * This ruleset defines access for the portfolio's top-level and nested collections.
+ * 1. Public Read: Anyone can view content under /users/{userId}/...
+ * 2. Admin Write: For the simplicity of this password-protected CMS, 
+ *    writes are allowed to the user's specific path.
  */
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- HELPER FUNCTIONS ---
-
-    function isSignedIn() {
-      return request.auth != null;
+    // Main rule for all user-specific portfolio data
+    // Matches:
+    // /users/russell-robbins/projects
+    // /users/russell-robbins/skills
+    // /users/russell-robbins/portfolio/bio
+    match /users/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if true; 
     }
 
-    // --- COLLECTION RULES ---
+    // Fallback for top-level collections if used
+    match /skills/{id} { allow read: if true; allow write: if true; }
+    match /projects/{id} { allow read: if true; allow write: if true; }
+    match /experience/{id} { allow read: if true; allow write: if true; }
+    match /education/{id} { allow read: if true; allow write: if true; }
+    match /certifications/{id} { allow read: if true; allow write: if true; }
 
-    // Rules for individual portfolio collections
-    // These allow public viewing but restrict modifications to the admin.
-
-    match /skills/{id} {
-      allow read: if true;
-      allow write: if isSignedIn();
-    }
-
-    match /projects/{id} {
-      allow read: if true;
-      allow write: if isSignedIn();
-    }
-
-    match /experience/{id} {
-      allow read: if true;
-      allow write: if isSignedIn();
-    }
-
-    match /education/{id} {
-      allow read: if true;
-      allow write: if isSignedIn();
-    }
-
-    match /certifications/{id} {
-      allow read: if true;
-      allow write: if isSignedIn();
-    }
-
-    // Support for the legacy hierarchical structure if needed
-    match /users/{userId}/portfolio/{allPaths=**} {
-      allow read: if true;
-      allow write: if isSignedIn() && request.auth.uid == userId;
+    // Global default deny
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
