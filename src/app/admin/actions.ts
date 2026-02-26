@@ -24,11 +24,12 @@ const getCollPath = (type: string) => collection(db, 'users', USER_ID, 'portfoli
 const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'portfolio', 'content', type, id);
 
 /**
- * Updates the Hero/Bio information.
+ * Updates the Hero/Bio information (Single Document).
  */
 export async function updateHeroInfo(data: { name: string; title: string; about: string }) {
   try {
     const docRef = doc(db, 'users', USER_ID, 'portfolio', 'bio');
+    // Using setDoc with merge for the single Bio document is appropriate
     await setDoc(docRef, { 
       ...data,
       updatedAt: new Date().toISOString() 
@@ -40,18 +41,20 @@ export async function updateHeroInfo(data: { name: string; title: string; about:
 }
 
 /**
- * Projects CRUD
+ * Projects CRUD (Collection)
  */
 export async function saveProject(project: any) {
   try {
-    if (project.id) {
-      const docRef = getDocPath('projects', project.id);
-      const { id, ...data } = project;
+    const { id, ...data } = project;
+    if (id) {
+      // Update existing
+      const docRef = getDocPath('projects', id);
       await updateDoc(docRef, data);
     } else {
+      // Add new - ensure we never use setDoc on a collection
       const colRef = getCollPath('projects');
       await addDoc(colRef, {
-        ...project,
+        ...data,
         createdAt: new Date().toISOString()
       });
     }
@@ -71,16 +74,19 @@ export async function deleteProjectAction(projectId: string) {
 }
 
 /**
- * Experience CRUD
+ * Experience CRUD (Collection)
  */
 export async function saveExperience(exp: any) {
   try {
-    if (exp.id) {
-      const docRef = getDocPath('experience', exp.id);
-      const { id, ...data } = exp;
+    const { id, ...data } = exp;
+    if (id) {
+      const docRef = getDocPath('experience', id);
       await updateDoc(docRef, data);
     } else {
-      await addDoc(getCollPath('experience'), { ...exp, createdAt: new Date().toISOString() });
+      await addDoc(getCollPath('experience'), { 
+        ...data, 
+        createdAt: new Date().toISOString() 
+      });
     }
     return { success: true };
   } catch (error: any) {
@@ -98,16 +104,19 @@ export async function deleteExperienceAction(id: string) {
 }
 
 /**
- * Education CRUD
+ * Education CRUD (Collection)
  */
 export async function saveEducation(edu: any) {
   try {
-    if (edu.id) {
-      const docRef = getDocPath('education', edu.id);
-      const { id, ...data } = edu;
+    const { id, ...data } = edu;
+    if (id) {
+      const docRef = getDocPath('education', id);
       await updateDoc(docRef, data);
     } else {
-      await addDoc(getCollPath('education'), { ...edu, createdAt: new Date().toISOString() });
+      await addDoc(getCollPath('education'), { 
+        ...data, 
+        createdAt: new Date().toISOString() 
+      });
     }
     return { success: true };
   } catch (error: any) {
@@ -125,16 +134,19 @@ export async function deleteEducationAction(id: string) {
 }
 
 /**
- * Skills CRUD
+ * Skills CRUD (Collection)
  */
 export async function saveSkillCategory(category: any) {
   try {
-    if (category.id) {
-      const docRef = getDocPath('skills', category.id);
-      const { id, ...data } = category;
+    const { id, ...data } = category;
+    if (id) {
+      const docRef = getDocPath('skills', id);
       await updateDoc(docRef, data);
     } else {
-      await addDoc(getCollPath('skills'), { ...category, createdAt: new Date().toISOString() });
+      await addDoc(getCollPath('skills'), { 
+        ...data, 
+        createdAt: new Date().toISOString() 
+      });
     }
     return { success: true };
   } catch (error: any) {
@@ -152,7 +164,7 @@ export async function deleteSkillCategoryAction(id: string) {
 }
 
 /**
- * AI Aligner
+ * AI Aligner Logic
  */
 export async function alignWithJobDescription(jobDescription: string) {
   try {

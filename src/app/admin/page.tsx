@@ -64,10 +64,12 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isAdmin) return;
 
+    // Bio Listener (4-segment document)
     const unsubHero = onSnapshot(doc(db, 'users', USER_ID, 'portfolio', 'bio'), (doc) => {
       if (doc.exists()) setHero(doc.data() as any);
     });
 
+    // Collection Listeners (5-segment collections)
     const unsubProjects = onSnapshot(query(collection(db, 'users', USER_ID, 'portfolio', 'content', 'projects'), orderBy('createdAt', 'desc')), (snapshot) => {
       setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
