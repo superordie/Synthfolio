@@ -20,7 +20,7 @@ const USER_ID = 'russell-robbins';
 
 /**
  * Standardized path: users/russell-robbins/portfolio/content/[type] (5 segments)
- * This is the only valid way to have a "sub-folder" for a collection.
+ * This is a valid Firestore collection path.
  */
 const getCollPath = (type: string) => collection(db, 'users', USER_ID, 'portfolio', 'content', type);
 const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'portfolio', 'content', type, id);
