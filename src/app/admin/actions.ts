@@ -30,7 +30,7 @@ const getDocPath = (type: string, id: string) => doc(db, 'users', USER_ID, 'port
  */
 export async function restorePortfolioData() {
   try {
-    // 1. Bio (4-segment document path - this is a single document, not a collection)
+    // 1. Bio (4-segment document path)
     const bioRef = doc(db, 'users', USER_ID, 'portfolio', 'bio');
     await setDoc(bioRef, { 
       about: staticBio.about,
