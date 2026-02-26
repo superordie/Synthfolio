@@ -135,32 +135,32 @@ export async function deleteEducationAction(id: string) {
 }
 
 /**
- * Updates a skill category in Firestore.
+ * Saves or updates an individual skill.
  */
-export async function updateSkillsCategory(category: { id?: string; title: string; skills: string[] }) {
+export async function saveSkill(skill: { id?: string; name: string }) {
   try {
     const colRef = collection(db, 'users', USER_ID, 'skills');
     
-    if (category.id) {
-      const docRef = doc(db, 'users', USER_ID, 'skills', category.id);
-      const { id, ...data } = category;
+    if (skill.id) {
+      const docRef = doc(db, 'users', USER_ID, 'skills', skill.id);
+      const { id, ...data } = skill;
       await updateDoc(docRef, data);
     } else {
-      await addDoc(colRef, category);
+      await addDoc(colRef, { ...skill, createdAt: new Date().toISOString() });
     }
 
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message || "Failed to update skills." };
+    return { success: false, error: error.message || "Failed to update skill." };
   }
 }
 
 /**
- * Deletes a skill category.
+ * Deletes an individual skill.
  */
-export async function deleteSkillsCategory(categoryId: string) {
+export async function deleteSkill(skillId: string) {
   try {
-    const docRef = doc(db, 'users', USER_ID, 'skills', categoryId);
+    const docRef = doc(db, 'users', USER_ID, 'skills', skillId);
     await deleteDoc(docRef);
     return { success: true };
   } catch (error: any) {
@@ -173,7 +173,6 @@ export async function deleteSkillsCategory(categoryId: string) {
  */
 export async function alignWithJobDescription(jobDescription: string) {
   try {
-    // 1. Fetch live data for AI context
     const bioSnap = await getDoc(doc(db, 'users', USER_ID, 'portfolio', 'bio'));
     const projectsSnap = await getDocs(collection(db, 'users', USER_ID, 'projects'));
     const skillsSnap = await getDocs(collection(db, 'users', USER_ID, 'skills'));
@@ -181,19 +180,17 @@ export async function alignWithJobDescription(jobDescription: string) {
     const eduSnap = await getDocs(collection(db, 'users', USER_ID, 'education'));
 
     const liveProjects = projectsSnap.docs.map(d => d.data());
-    const liveSkills = skillsSnap.docs.map(d => d.data());
+    const liveSkills = skillsSnap.docs.map(d => d.data().name); // Mapping simplified skill names
     const liveExp = expSnap.docs.map(d => d.data());
     const liveEdu = eduSnap.docs.map(d => d.data());
     const liveBio = bioSnap.exists() ? bioSnap.data().about : staticContent.aboutMe;
 
-    // 2. Format skills for the AI prompt
     const formattedSkills = {
-      technicalSkills: liveSkills.find(s => s.title === 'Technical Skills')?.skills || staticContent.skills.technicalSkills,
-      toolsAndTechnologies: liveSkills.find(s => s.title === 'Tools & Technologies')?.skills || staticContent.skills.toolsAndTechnologies,
-      professionalSoftSkills: liveSkills.find(s => s.title === 'Professional & Soft Skills')?.skills || staticContent.skills.professionalSoftSkills,
+      technicalSkills: liveSkills.length > 0 ? liveSkills : staticContent.skills.technicalSkills,
+      toolsAndTechnologies: staticContent.skills.toolsAndTechnologies,
+      professionalSoftSkills: staticContent.skills.professionalSoftSkills,
     };
 
-    // 3. Prepare the input
     const input = {
       jobDescription,
       portfolioContent: {
@@ -222,7 +219,6 @@ export async function alignWithJobDescription(jobDescription: string) {
       }
     };
 
-    // 4. Run the Genkit Flow
     const result = await jobDescriptionSkillHighlighter(input);
     return result;
 

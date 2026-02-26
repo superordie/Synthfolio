@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,7 +20,8 @@ import {
   LogOut,
   Layers,
   Briefcase,
-  GraduationCap
+  GraduationCap,
+  X
 } from 'lucide-react';
 import { db } from '@/firebase/config';
 import { collection, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
@@ -28,8 +29,8 @@ import {
   updateHeroInfo, 
   saveProject, 
   deleteProjectAction, 
-  updateSkillsCategory,
-  deleteSkillsCategory,
+  saveSkill,
+  deleteSkill,
   saveExperience,
   deleteExperienceAction,
   saveEducation,
@@ -39,7 +40,7 @@ import { Badge } from '@/components/ui/badge';
 
 const USER_ID = 'russell-robbins';
 
-export default function AdminCMS() {
+export default function AdminDashboard() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { isAdmin, login, logout } = useAdmin();
@@ -52,11 +53,11 @@ export default function AdminCMS() {
   const [experience, setExperience] = useState<any[]>([]);
   const [education, setEducation] = useState<any[]>([]);
   
-  // Editing states
+  // Editing states (forms)
   const [editingProject, setEditingProject] = useState<any | null>(null);
   const [editingExp, setEditingExp] = useState<any | null>(null);
   const [editingEdu, setEditingEdu] = useState<any | null>(null);
-  const [editingSkillCat, setEditingSkillCat] = useState<any | null>(null);
+  const [newSkillName, setNewSkillName] = useState('');
 
   const ADMIN_PASSWORD = 'Li0nMast3r';
 
@@ -72,7 +73,7 @@ export default function AdminCMS() {
       setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
-    const unsubSkills = onSnapshot(collection(db, 'users', USER_ID, 'skills'), (snapshot) => {
+    const unsubSkills = onSnapshot(query(collection(db, 'users', USER_ID, 'skills'), orderBy('createdAt', 'asc')), (snapshot) => {
       setSkills(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
@@ -118,9 +119,21 @@ export default function AdminCMS() {
   };
 
   const handleDelete = async (id: string, action: Function, title: string) => {
-    if (!confirm(`Delete this ${title}?`)) return;
+    if (!confirm(`Are you sure you want to delete this ${title}?`)) return;
     const res = await action(id);
     if (res.success) toast({ title: `${title} Deleted` });
+  };
+
+  const handleAddSkill = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSkillName.trim()) return;
+    setIsLoading(true);
+    const res = await saveSkill({ name: newSkillName });
+    setIsLoading(false);
+    if (res.success) {
+      setNewSkillName('');
+      toast({ title: "Skill Added" });
+    }
   };
 
   if (!isAdmin) {
@@ -154,7 +167,7 @@ export default function AdminCMS() {
         <div className="flex items-center justify-between border-b border-white/10 pb-6">
           <div className="flex items-center gap-3">
             <Unlock className="text-primary h-6 w-6" />
-            <h1 className="text-3xl font-bold font-headline tracking-tight">Portfolio CMS</h1>
+            <h1 className="text-3xl font-bold font-headline tracking-tight">Management Dashboard</h1>
           </div>
           <Button variant="outline" onClick={logout} className="gap-2">
             <LogOut className="h-4 w-4" /> Log Out
@@ -171,17 +184,26 @@ export default function AdminCMS() {
           </TabsList>
 
           <TabsContent value="bio">
-            <Card className="bg-slate-900 border-white/10 text-white">
+            <Card className="bg-slate-900 border-white/10 text-white shadow-lg">
               <CardHeader><CardTitle>Core Identity</CardTitle></CardHeader>
               <CardContent>
                 <form onSubmit={handleHeroUpdate} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input placeholder="Full Name" value={hero.name} onChange={(e) => setHero({...hero, name: e.target.value})} className="bg-slate-800 border-slate-700" />
-                    <Input placeholder="Title" value={hero.title} onChange={(e) => setHero({...hero, title: e.target.value})} className="bg-slate-800 border-slate-700" />
+                    <div className="space-y-2">
+                      <label className="text-xs uppercase font-bold text-muted-foreground">Full Name</label>
+                      <Input placeholder="Full Name" value={hero.name} onChange={(e) => setHero({...hero, name: e.target.value})} className="bg-slate-800 border-slate-700" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs uppercase font-bold text-muted-foreground">Professional Title</label>
+                      <Input placeholder="Title" value={hero.title} onChange={(e) => setHero({...hero, title: e.target.value})} className="bg-slate-800 border-slate-700" />
+                    </div>
                   </div>
-                  <Textarea rows={8} placeholder="About Me" value={hero.about} onChange={(e) => setHero({...hero, about: e.target.value})} className="bg-slate-800 border-slate-700" />
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-muted-foreground">About Me Summary</label>
+                    <Textarea rows={10} placeholder="About Me" value={hero.about} onChange={(e) => setHero({...hero, about: e.target.value})} className="bg-slate-800 border-slate-700" />
+                  </div>
                   <Button type="submit" disabled={isLoading} className="gap-2">
-                    {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />} Save Bio
+                    {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />} Save Hero Content
                   </Button>
                 </form>
               </CardContent>
@@ -190,34 +212,43 @@ export default function AdminCMS() {
 
           <TabsContent value="projects" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold font-headline">Projects</h2>
+              <h2 className="text-2xl font-bold font-headline">Projects Management</h2>
               <Button onClick={() => setEditingProject({ projectTitle: '', projectPurposeProblemSolved: '', toolsOrTechnologiesUsed: [], projectLink: '' })} className="gap-2">
-                <Plus className="h-4 w-4" /> New Project
+                <Plus className="h-4 w-4" /> Add New Project
               </Button>
             </div>
+            
             {editingProject && (
               <Card className="bg-slate-900 border-primary/50 text-white">
-                <CardHeader><CardTitle>{editingProject.id ? 'Edit' : 'New'} Project</CardTitle></CardHeader>
+                <CardHeader><CardTitle>{editingProject.id ? 'Edit' : 'Create'} Project</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <Input placeholder="Title" value={editingProject.projectTitle} onChange={(e) => setEditingProject({...editingProject, projectTitle: e.target.value})} className="bg-slate-800 border-slate-700" />
-                  <Textarea placeholder="Description" value={editingProject.projectPurposeProblemSolved} onChange={(e) => setEditingProject({...editingProject, projectPurposeProblemSolved: e.target.value})} className="bg-slate-800 border-slate-700" />
-                  <Input placeholder="Stack (comma separated)" value={editingProject.toolsOrTechnologiesUsed?.join(', ')} onChange={(e) => setEditingProject({...editingProject, toolsOrTechnologiesUsed: e.target.value.split(',').map(s => s.trim())})} className="bg-slate-800 border-slate-700" />
-                  <Input placeholder="GitHub Link" value={editingProject.projectLink} onChange={(e) => setEditingProject({...editingProject, projectLink: e.target.value})} className="bg-slate-800 border-slate-700" />
+                  <Input placeholder="Project Title" value={editingProject.projectTitle} onChange={(e) => setEditingProject({...editingProject, projectTitle: e.target.value})} className="bg-slate-800" />
+                  <Textarea placeholder="What problem did this solve?" value={editingProject.projectPurposeProblemSolved} onChange={(e) => setEditingProject({...editingProject, projectPurposeProblemSolved: e.target.value})} className="bg-slate-800" />
+                  <Input placeholder="Tech Stack (comma separated)" value={editingProject.toolsOrTechnologiesUsed?.join(', ')} onChange={(e) => setEditingProject({...editingProject, toolsOrTechnologiesUsed: e.target.value.split(',').map(s => s.trim())})} className="bg-slate-800" />
+                  <Input placeholder="GitHub/Source Link" value={editingProject.projectLink} onChange={(e) => setEditingProject({...editingProject, projectLink: e.target.value})} className="bg-slate-800" />
                   <div className="flex gap-2">
-                    <Button onClick={() => handleSave(editingProject, saveProject, setEditingProject, 'Project')}>Save</Button>
+                    <Button onClick={() => handleSave(editingProject, saveProject, setEditingProject, 'Project')}>Save Changes</Button>
                     <Button variant="ghost" onClick={() => setEditingProject(null)}>Cancel</Button>
                   </div>
                 </CardContent>
               </Card>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {projects.map(p => (
-                <Card key={p.id} className="bg-slate-900 border-white/5 flex flex-row items-center justify-between p-4">
-                  <span className="font-semibold">{p.projectTitle}</span>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => setEditingProject(p)}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(p.id, deleteProjectAction, 'Project')}><Trash className="h-4 w-4" /></Button>
-                  </div>
+                <Card key={p.id} className="bg-slate-900 border-white/5 hover:border-white/20 transition-all shadow-md">
+                  <CardHeader>
+                    <CardTitle className="text-xl">{p.projectTitle}</CardTitle>
+                    <CardDescription className="line-clamp-2 text-slate-400">{p.projectPurposeProblemSolved}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setEditingProject(p)} className="gap-1">
+                      <Edit className="h-3 w-3" /> Edit
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(p.id, deleteProjectAction, 'Project')} className="gap-1">
+                      <Trash className="h-3 w-3" /> Delete
+                    </Button>
+                  </CardContent>
                 </Card>
               ))}
             </div>
@@ -225,93 +256,114 @@ export default function AdminCMS() {
 
           <TabsContent value="skills" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold font-headline">Skills</h2>
-              <Button onClick={() => setEditingSkillCat({ title: '', skills: [] })} className="gap-2">
-                <Plus className="h-4 w-4" /> New Category
-              </Button>
+              <h2 className="text-2xl font-bold font-headline">Skills Management</h2>
             </div>
-            {editingSkillCat && (
-              <Card className="bg-slate-900 border-primary/50 text-white p-4 space-y-4">
-                <Input placeholder="Category Title" value={editingSkillCat.title} onChange={(e) => setEditingSkillCat({...editingSkillCat, title: e.target.value})} className="bg-slate-800 border-slate-700" />
-                <Input placeholder="Skills (comma separated)" value={editingSkillCat.skills?.join(', ')} onChange={(e) => setEditingSkillCat({...editingSkillCat, skills: e.target.value.split(',').map(s => s.trim())})} className="bg-slate-800 border-slate-700" />
-                <div className="flex gap-2">
-                  <Button onClick={() => handleSave(editingSkillCat, updateSkillsCategory, setEditingSkillCat, 'Skills Category')}>Save</Button>
-                  <Button variant="ghost" onClick={() => setEditingSkillCat(null)}>Cancel</Button>
-                </div>
-              </Card>
-            )}
-            <div className="grid grid-cols-1 gap-4">
-              {skills.map(s => (
-                <Card key={s.id} className="bg-slate-900 border-white/5 p-4 flex justify-between items-center">
-                  <div>
-                    <h3 className="font-bold">{s.title}</h3>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {s.skills.map((sk: string, i: number) => <Badge key={i} variant="secondary">{sk}</Badge>)}
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => setEditingSkillCat(s)}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(s.id, deleteSkillsCategory, 'Category')}><Trash className="h-4 w-4" /></Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            
+            <Card className="bg-slate-900 border-white/10 p-6">
+              <form onSubmit={handleAddSkill} className="flex gap-2 mb-8">
+                <Input 
+                  placeholder="Enter a new skill name..." 
+                  value={newSkillName} 
+                  onChange={(e) => setNewSkillName(e.target.value)}
+                  className="bg-slate-800"
+                />
+                <Button type="submit" className="gap-2">
+                  <Plus className="h-4 w-4" /> Add Skill
+                </Button>
+              </form>
+
+              <div className="flex flex-wrap gap-3">
+                {skills.map(s => (
+                  <Badge 
+                    key={s.id} 
+                    variant="secondary" 
+                    className="py-2 px-3 text-sm flex items-center gap-2 bg-slate-800 border-slate-700"
+                  >
+                    {s.name}
+                    <button 
+                      onClick={() => handleDelete(s.id, deleteSkill, 'Skill')}
+                      className="text-slate-500 hover:text-destructive transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </Card>
           </TabsContent>
 
           <TabsContent value="experience" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold font-headline">Experience</h2>
-              <Button onClick={() => setEditingExp({ jobTitleRole: '', organizationCompany: '', datesOfInvolvement: '', keyResponsibilities: [] })}><Plus className="h-4 w-4 mr-2" /> Add</Button>
+              <h2 className="text-2xl font-bold font-headline">Work Experience</h2>
+              <Button onClick={() => setEditingExp({ jobTitleRole: '', organizationCompany: '', datesOfInvolvement: '', keyResponsibilities: [] })} className="gap-2">
+                <Plus className="h-4 w-4" /> Add Experience
+              </Button>
             </div>
+
             {editingExp && (
-              <Card className="bg-slate-900 border-primary/50 p-4 space-y-4">
+              <Card className="bg-slate-900 border-primary/50 p-6 space-y-4">
                 <Input placeholder="Job Title" value={editingExp.jobTitleRole} onChange={(e) => setEditingExp({...editingExp, jobTitleRole: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Company" value={editingExp.organizationCompany} onChange={(e) => setEditingExp({...editingExp, organizationCompany: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Dates" value={editingExp.datesOfInvolvement} onChange={(e) => setEditingExp({...editingExp, datesOfInvolvement: e.target.value})} className="bg-slate-800" />
-                <Textarea placeholder="Responsibilities (one per line)" value={editingExp.keyResponsibilities?.join('\n')} onChange={(e) => setEditingExp({...editingExp, keyResponsibilities: e.target.value.split('\n')})} className="bg-slate-800" />
+                <Input placeholder="Company / Organization" value={editingExp.organizationCompany} onChange={(e) => setEditingExp({...editingExp, organizationCompany: e.target.value})} className="bg-slate-800" />
+                <Input placeholder="Dates (e.g. 2022 - Present)" value={editingExp.datesOfInvolvement} onChange={(e) => setEditingExp({...editingExp, datesOfInvolvement: e.target.value})} className="bg-slate-800" />
+                <Textarea placeholder="Responsibilities (one per line)" value={editingExp.keyResponsibilities?.join('\n')} onChange={(e) => setEditingExp({...editingExp, keyResponsibilities: e.target.value.split('\n')})} className="bg-slate-800" rows={5} />
                 <div className="flex gap-2">
                   <Button onClick={() => handleSave(editingExp, saveExperience, setEditingExp, 'Experience')}>Save</Button>
                   <Button variant="ghost" onClick={() => setEditingExp(null)}>Cancel</Button>
                 </div>
               </Card>
             )}
-            {experience.map(e => (
-              <Card key={e.id} className="bg-slate-900 border-white/5 p-4 flex justify-between items-center">
-                <span>{e.jobTitleRole} @ {e.organizationCompany}</span>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => setEditingExp(e)}><Edit className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(e.id, deleteExperienceAction, 'Experience')}><Trash className="h-4 w-4" /></Button>
-                </div>
-              </Card>
-            ))}
+
+            <div className="space-y-4">
+              {experience.map(e => (
+                <Card key={e.id} className="bg-slate-900 border-white/5 p-4 flex justify-between items-center">
+                  <div>
+                    <h3 className="font-bold">{e.jobTitleRole}</h3>
+                    <p className="text-sm text-slate-400">{e.organizationCompany} | {e.datesOfInvolvement}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="icon" onClick={() => setEditingExp(e)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="destructive" size="icon" onClick={() => handleDelete(e.id, deleteExperienceAction, 'Experience')}><Trash className="h-4 w-4" /></Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
 
           <TabsContent value="education" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold font-headline">Education</h2>
-              <Button onClick={() => setEditingEdu({ degreeProgramName: '', institutionName: '', completionDate: '', relevantCourseworkOrFocusAreas: [] })}><Plus className="h-4 w-4 mr-2" /> Add</Button>
+              <Button onClick={() => setEditingEdu({ degreeProgramName: '', institutionName: '', completionDate: '', relevantCourseworkOrFocusAreas: [] })} className="gap-2">
+                <Plus className="h-4 w-4" /> Add Education
+              </Button>
             </div>
+
             {editingEdu && (
-              <Card className="bg-slate-900 border-primary/50 p-4 space-y-4">
-                <Input placeholder="Degree" value={editingEdu.degreeProgramName} onChange={(e) => setEditingEdu({...editingEdu, degreeProgramName: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Institution" value={editingEdu.institutionName} onChange={(e) => setEditingEdu({...editingEdu, institutionName: e.target.value})} className="bg-slate-800" />
+              <Card className="bg-slate-900 border-primary/50 p-6 space-y-4">
+                <Input placeholder="Degree / Program" value={editingEdu.degreeProgramName} onChange={(e) => setEditingEdu({...editingEdu, degreeProgramName: e.target.value})} className="bg-slate-800" />
+                <Input placeholder="Institution Name" value={editingEdu.institutionName} onChange={(e) => setEditingEdu({...editingEdu, institutionName: e.target.value})} className="bg-slate-800" />
                 <Input placeholder="Completion Date" value={editingEdu.completionDate} onChange={(e) => setEditingEdu({...editingEdu, completionDate: e.target.value})} className="bg-slate-800" />
-                <Input placeholder="Coursework (comma separated)" value={editingEdu.relevantCourseworkOrFocusAreas?.join(', ')} onChange={(e) => setEditingEdu({...editingEdu, relevantCourseworkOrFocusAreas: e.target.value.split(',').map(s => s.trim())})} className="bg-slate-800" />
+                <Input placeholder="Relevant Coursework (comma separated)" value={editingEdu.relevantCourseworkOrFocusAreas?.join(', ')} onChange={(e) => setEditingEdu({...editingEdu, relevantCourseworkOrFocusAreas: e.target.value.split(',').map(s => s.trim())})} className="bg-slate-800" />
                 <div className="flex gap-2">
                   <Button onClick={() => handleSave(editingEdu, saveEducation, setEditingEdu, 'Education')}>Save</Button>
                   <Button variant="ghost" onClick={() => setEditingEdu(null)}>Cancel</Button>
                 </div>
               </Card>
             )}
-            {education.map(e => (
-              <Card key={e.id} className="bg-slate-900 border-white/5 p-4 flex justify-between items-center">
-                <span>{e.degreeProgramName} from {e.institutionName}</span>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => setEditingEdu(e)}><Edit className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(e.id, deleteEducationAction, 'Education')}><Trash className="h-4 w-4" /></Button>
-                </div>
-              </Card>
-            ))}
+
+            <div className="space-y-4">
+              {education.map(e => (
+                <Card key={e.id} className="bg-slate-900 border-white/5 p-4 flex justify-between items-center">
+                  <div>
+                    <h3 className="font-bold">{e.degreeProgramName}</h3>
+                    <p className="text-sm text-slate-400">{e.institutionName} | {e.completionDate}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="icon" onClick={() => setEditingEdu(e)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="destructive" size="icon" onClick={() => handleDelete(e.id, deleteEducationAction, 'Education')}><Trash className="h-4 w-4" /></Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
