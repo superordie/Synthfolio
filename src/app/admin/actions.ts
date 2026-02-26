@@ -135,32 +135,32 @@ export async function deleteEducationAction(id: string) {
 }
 
 /**
- * Saves or updates an individual skill.
+ * Saves or updates a skill category.
  */
-export async function saveSkill(skill: { id?: string; name: string }) {
+export async function saveSkillCategory(category: { id?: string; title: string; skills: string[] }) {
   try {
     const colRef = collection(db, 'users', USER_ID, 'skills');
     
-    if (skill.id) {
-      const docRef = doc(db, 'users', USER_ID, 'skills', skill.id);
-      const { id, ...data } = skill;
+    if (category.id) {
+      const docRef = doc(db, 'users', USER_ID, 'skills', category.id);
+      const { id, ...data } = category;
       await updateDoc(docRef, data);
     } else {
-      await addDoc(colRef, { ...skill, createdAt: new Date().toISOString() });
+      await addDoc(colRef, { ...category, createdAt: new Date().toISOString() });
     }
 
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message || "Failed to update skill." };
+    return { success: false, error: error.message || "Failed to save skill category." };
   }
 }
 
 /**
- * Deletes an individual skill.
+ * Deletes a skill category.
  */
-export async function deleteSkill(skillId: string) {
+export async function deleteSkillCategoryAction(categoryId: string) {
   try {
-    const docRef = doc(db, 'users', USER_ID, 'skills', skillId);
+    const docRef = doc(db, 'users', USER_ID, 'skills', categoryId);
     await deleteDoc(docRef);
     return { success: true };
   } catch (error: any) {
@@ -180,15 +180,15 @@ export async function alignWithJobDescription(jobDescription: string) {
     const eduSnap = await getDocs(collection(db, 'users', USER_ID, 'education'));
 
     const liveProjects = projectsSnap.docs.map(d => d.data());
-    const liveSkills = skillsSnap.docs.map(d => d.data().name); // Mapping simplified skill names
+    const liveSkillsDocs = skillsSnap.docs.map(d => d.data());
     const liveExp = expSnap.docs.map(d => d.data());
     const liveEdu = eduSnap.docs.map(d => d.data());
     const liveBio = bioSnap.exists() ? bioSnap.data().about : staticContent.aboutMe;
 
     const formattedSkills = {
-      technicalSkills: liveSkills.length > 0 ? liveSkills : staticContent.skills.technicalSkills,
-      toolsAndTechnologies: staticContent.skills.toolsAndTechnologies,
-      professionalSoftSkills: staticContent.skills.professionalSoftSkills,
+      technicalSkills: liveSkillsDocs.find(d => d.title === 'Technical Skills')?.skills || staticContent.skills.technicalSkills,
+      toolsAndTechnologies: liveSkillsDocs.find(d => d.title === 'Tools & Technologies')?.skills || staticContent.skills.toolsAndTechnologies,
+      professionalSoftSkills: liveSkillsDocs.find(d => d.title === 'Professional/Soft Skills')?.skills || staticContent.skills.professionalSoftSkills,
     };
 
     const input = {

@@ -21,7 +21,8 @@ import {
   Layers,
   Briefcase,
   GraduationCap,
-  X
+  X,
+  ChevronDown
 } from 'lucide-react';
 import { db } from '@/firebase/config';
 import { collection, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
@@ -29,14 +30,15 @@ import {
   updateHeroInfo, 
   saveProject, 
   deleteProjectAction, 
-  saveSkill,
-  deleteSkill,
+  saveSkillCategory,
+  deleteSkillCategoryAction,
   saveExperience,
   deleteExperienceAction,
   saveEducation,
   deleteEducationAction
 } from './actions';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const USER_ID = 'russell-robbins';
 
@@ -49,7 +51,7 @@ export default function AdminDashboard() {
   // CMS State
   const [hero, setHero] = useState({ name: '', title: '', about: '' });
   const [projects, setProjects] = useState<any[]>([]);
-  const [skills, setSkills] = useState<any[]>([]);
+  const [skillCategories, setSkillCategories] = useState<any[]>([]);
   const [experience, setExperience] = useState<any[]>([]);
   const [education, setEducation] = useState<any[]>([]);
   
@@ -57,7 +59,8 @@ export default function AdminDashboard() {
   const [editingProject, setEditingProject] = useState<any | null>(null);
   const [editingExp, setEditingExp] = useState<any | null>(null);
   const [editingEdu, setEditingEdu] = useState<any | null>(null);
-  const [newSkillName, setNewSkillName] = useState('');
+  const [editingCat, setEditingCat] = useState<any | null>(null);
+  const [newSkillNames, setNewSkillNames] = useState<Record<string, string>>({});
 
   const ADMIN_PASSWORD = 'Li0nMast3r';
 
@@ -74,7 +77,7 @@ export default function AdminDashboard() {
     });
 
     const unsubSkills = onSnapshot(query(collection(db, 'users', USER_ID, 'skills'), orderBy('createdAt', 'asc')), (snapshot) => {
-      setSkills(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setSkillCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
     const unsubExp = onSnapshot(query(collection(db, 'users', USER_ID, 'experience'), orderBy('createdAt', 'desc')), (snapshot) => {
@@ -124,16 +127,22 @@ export default function AdminDashboard() {
     if (res.success) toast({ title: `${title} Deleted` });
   };
 
-  const handleAddSkill = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newSkillName.trim()) return;
-    setIsLoading(true);
-    const res = await saveSkill({ name: newSkillName });
-    setIsLoading(false);
+  const handleAddSkillToCategory = async (cat: any) => {
+    const skillName = newSkillNames[cat.id];
+    if (!skillName?.trim()) return;
+    
+    const updatedSkills = [...(cat.skills || []), skillName.trim()];
+    const res = await saveSkillCategory({ ...cat, skills: updatedSkills });
     if (res.success) {
-      setNewSkillName('');
+      setNewSkillNames(prev => ({ ...prev, [cat.id]: '' }));
       toast({ title: "Skill Added" });
     }
+  };
+
+  const handleRemoveSkillFromCategory = async (cat: any, skillToRemove: string) => {
+    const updatedSkills = cat.skills.filter((s: string) => s !== skillToRemove);
+    const res = await saveSkillCategory({ ...cat, skills: updatedSkills });
+    if (res.success) toast({ title: "Skill Removed" });
   };
 
   if (!isAdmin) {
@@ -256,40 +265,67 @@ export default function AdminDashboard() {
 
           <TabsContent value="skills" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold font-headline">Skills Management</h2>
+              <h2 className="text-2xl font-bold font-headline">Skills & Categories</h2>
+              <Button onClick={() => setEditingCat({ title: '', skills: [] })} className="gap-2">
+                <Plus className="h-4 w-4" /> Add Category
+              </Button>
             </div>
             
-            <Card className="bg-slate-900 border-white/10 p-6">
-              <form onSubmit={handleAddSkill} className="flex gap-2 mb-8">
-                <Input 
-                  placeholder="Enter a new skill name..." 
-                  value={newSkillName} 
-                  onChange={(e) => setNewSkillName(e.target.value)}
-                  className="bg-slate-800"
-                />
-                <Button type="submit" className="gap-2">
-                  <Plus className="h-4 w-4" /> Add Skill
-                </Button>
-              </form>
+            {editingCat && (
+              <Card className="bg-slate-900 border-primary/50 text-white mb-6">
+                <CardHeader><CardTitle>New Skill Category</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <Input placeholder="Category Title (e.g. Frontend)" value={editingCat.title} onChange={(e) => setEditingCat({...editingCat, title: e.target.value})} className="bg-slate-800" />
+                  <div className="flex gap-2">
+                    <Button onClick={() => handleSave(editingCat, saveSkillCategory, setEditingCat, 'Category')}>Create Category</Button>
+                    <Button variant="ghost" onClick={() => setEditingCat(null)}>Cancel</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-              <div className="flex flex-wrap gap-3">
-                {skills.map(s => (
-                  <Badge 
-                    key={s.id} 
-                    variant="secondary" 
-                    className="py-2 px-3 text-sm flex items-center gap-2 bg-slate-800 border-slate-700"
-                  >
-                    {s.name}
-                    <button 
-                      onClick={() => handleDelete(s.id, deleteSkill, 'Skill')}
-                      className="text-slate-500 hover:text-destructive transition-colors"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            </Card>
+            <Accordion type="single" collapsible className="space-y-4">
+              {skillCategories.map(cat => (
+                <AccordionItem key={cat.id} value={cat.id} className="bg-slate-900 border border-white/10 rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-4 w-full">
+                      <span className="font-bold text-lg">{cat.title}</span>
+                      <Badge variant="outline" className="ml-auto mr-4">{cat.skills?.length || 0} Skills</Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-4 pb-6 space-y-6">
+                    <div className="flex items-center gap-2 border-b border-white/5 pb-4">
+                      <Input 
+                        placeholder="Add a skill to this category..." 
+                        value={newSkillNames[cat.id] || ''} 
+                        onChange={(e) => setNewSkillNames(prev => ({ ...prev, [cat.id]: e.target.value }))}
+                        className="bg-slate-800"
+                      />
+                      <Button onClick={() => handleAddSkillToCategory(cat)} size="sm" className="gap-2">
+                        <Plus className="h-4 w-4" /> Add
+                      </Button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {cat.skills?.map((skill: string) => (
+                        <Badge key={skill} variant="secondary" className="bg-slate-800 py-1 px-3 flex items-center gap-2">
+                          {skill}
+                          <button onClick={() => handleRemoveSkillFromCategory(cat, skill)} className="text-slate-500 hover:text-destructive">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4 border-t border-white/5">
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(cat.id, deleteSkillCategoryAction, 'Category')} className="gap-2">
+                        <Trash className="h-4 w-4" /> Delete Entire Category
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </TabsContent>
 
           <TabsContent value="experience" className="space-y-6">
