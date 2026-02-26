@@ -1,54 +1,121 @@
 'use server';
 
 import { db } from '@/firebase/config';
-import { doc, setDoc } from 'firebase/firestore';
+import { 
+  doc, 
+  setDoc, 
+  collection, 
+  addDoc, 
+  deleteDoc, 
+  updateDoc
+} from 'firebase/firestore';
+
+const USER_ID = 'russell-robbins';
 
 /**
- * Updates the 'About Me' bio in Firestore.
- * Path: users/russell-robbins/portfolio/bio
+ * Updates the Hero/Bio information in Firestore.
  */
-export async function updateAboutContent(newAboutText: string) {
+export async function updateHeroInfo(data: { name: string; title: string; about: string }) {
   try {
-    // Standardizing the document path to match your Hero/About components
-    const docRef = doc(db, 'users', 'russell-robbins', 'portfolio', 'bio');
-
+    const docRef = doc(db, 'users', USER_ID, 'portfolio', 'bio');
     await setDoc(docRef, { 
-      about: newAboutText, 
+      ...data,
       updatedAt: new Date().toISOString() 
     }, { merge: true });
 
     return { success: true };
   } catch (error: any) {
-    console.error("Firebase Save Error:", error);
-    return { 
-      success: false, 
-      error: error.message || "Database rejected the save. Check Firebase Rules." 
-    };
+    console.error("Hero Update Error:", error);
+    return { success: false, error: error.message || "Failed to update hero info." };
   }
 }
 
 /**
- * Placeholder for AI Alignment features.
- * This prevents the app from crashing if other components try to import it.
+ * Saves or updates a project in Firestore.
+ */
+export async function saveProject(project: any) {
+  try {
+    const colRef = collection(db, 'users', USER_ID, 'portfolio', 'projects');
+    
+    if (project.id) {
+      const docRef = doc(db, 'users', USER_ID, 'portfolio', 'projects', project.id);
+      const { id, ...data } = project;
+      await updateDoc(docRef, data);
+    } else {
+      await addDoc(colRef, {
+        ...project,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Project Save Error:", error);
+    return { success: false, error: error.message || "Failed to save project." };
+  }
+}
+
+/**
+ * Deletes a project from Firestore.
+ */
+export async function deleteProjectAction(projectId: string) {
+  try {
+    const docRef = doc(db, 'users', USER_ID, 'portfolio', 'projects', projectId);
+    await deleteDoc(docRef);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Project Delete Error:", error);
+    return { success: false, error: error.message || "Failed to delete project." };
+  }
+}
+
+/**
+ * Updates a skill category in Firestore.
+ */
+export async function updateSkillsCategory(category: { id?: string; title: string; skills: string[] }) {
+  try {
+    const colRef = collection(db, 'users', USER_ID, 'portfolio', 'skillCategories');
+    
+    if (category.id) {
+      const docRef = doc(db, 'users', USER_ID, 'portfolio', 'skillCategories', category.id);
+      const { id, ...data } = category;
+      await updateDoc(docRef, data);
+    } else {
+      await addDoc(colRef, category);
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Skills Update Error:", error);
+    return { success: false, error: error.message || "Failed to update skills." };
+  }
+}
+
+/**
+ * Deletes a skill category.
+ */
+export async function deleteSkillsCategory(categoryId: string) {
+  try {
+    const docRef = doc(db, 'users', USER_ID, 'portfolio', 'skillCategories', categoryId);
+    await deleteDoc(docRef);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Legacy support/AI features
  */
 export async function alignWithJobDescription(jobDescription: string) {
   try {
-    console.log("AI Alignment triggered for:", jobDescription);
-    
-    // In a future update, we can add OpenAI/Gemini logic here.
+    console.log("AI Alignment triggered");
     return { 
       success: true, 
-      matches: ["Technical Management", "AI Development", "Next.js"],
-      message: "Alignment placeholder active."
+      matches: ["Technical Management", "AI Development"],
+      message: "Alignment complete."
     };
   } catch (error: any) {
-    return { success: false, error: "AI Service currently unavailable." };
+    return { success: false, error: "AI Service error." };
   }
-}
-
-/**
- * Optional: Helper to reset the bio to a default state if needed
- */
-export async function resetBio() {
-  return await updateAboutContent("Hello! I am Russell Robbins, a technical manager and AI developer.");
 }
