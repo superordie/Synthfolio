@@ -5,37 +5,25 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-/**
- * Initializes Firebase with enhanced error handling to prevent 
- * application-wide crashes during the development boot cycle.
- */
 export function initializeFirebase() {
   try {
+    let firebaseApp: FirebaseApp;
+
     if (!getApps().length) {
-      let firebaseApp: FirebaseApp;
-      
-      // Attempt standard initialization (preferred for App Hosting)
       try {
+        // Try default initialization first
         firebaseApp = initializeApp();
       } catch (e) {
-        // Fallback to explicit config (standard for development)
-        // We catch errors here to prevent the entire app from failing to compile
-        // if the API key or config is temporarily invalid.
-        try {
-          firebaseApp = initializeApp(firebaseConfig);
-        } catch (configError: any) {
-          console.error("Firebase Configuration Error:", configError.message);
-          // Return a dummy initialization to allow the app to boot and show the error boundary
-          throw configError;
-        }
+        // Fallback to your explicit config if default fails
+        firebaseApp = initializeApp(firebaseConfig);
       }
-
-      return getSdks(firebaseApp);
+    } else {
+      firebaseApp = getApp();
     }
 
-    return getSdks(getApp());
+    return getSdks(firebaseApp);
   } catch (err) {
-    // Re-throw so the FirebaseClientProvider can handle it or let GlobalError catch it
+    console.error("Firebase Initialization Failed:", err);
     throw err;
   }
 }

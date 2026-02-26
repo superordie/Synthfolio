@@ -1,30 +1,20 @@
+
 'use client';
 
-import { useState } from 'react';
 import Section from '@/components/Section';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, BookOpen, ExternalLink, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Award, BookOpen, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { portfolioContent } from '@/lib/data';
-import { useAdmin } from '@/hooks/use-admin';
 import { Button } from '@/components/ui/button';
-import EducationFormDialog from '@/components/EducationFormDialog';
-import CertificationFormDialog from '@/components/CertificationFormDialog';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
-import { addEducation, updateEducation, deleteEducation, type Education } from '@/firebase/firestore/education';
-import { addCertification, updateCertification, deleteCertification, type Certification } from '@/firebase/firestore/certifications';
+import type { Education } from '@/firebase/firestore/education';
+import type { Certification } from '@/firebase/firestore/certifications';
 
 const EducationSection = () => {
-  const { isAdmin } = useAdmin();
   const firestore = useFirestore();
-  
-  const [isEduOpen, setIsEduOpen] = useState(false);
-  const [editingEdu, setEditingEdu] = useState<Education | null>(null);
-  
-  const [isCertOpen, setIsCertOpen] = useState(false);
-  const [editingCert, setEditingCert] = useState<Certification | null>(null);
 
   // Fetch live education
   const eduQuery = useMemoFirebase(() => {
@@ -61,11 +51,6 @@ const EducationSection = () => {
               <BookOpen className="text-primary" />
               Education
             </CardTitle>
-            {isAdmin && (
-              <Button size="sm" variant="ghost" onClick={() => { setEditingEdu(null); setIsEduOpen(true); }}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
-            )}
           </CardHeader>
           <CardContent className="space-y-6">
             {displayedEdu.map((edu: any) => (
@@ -76,16 +61,6 @@ const EducationSection = () => {
                     <p className="text-muted-foreground">{edu.institutionName}</p>
                     <p className="text-sm text-muted-foreground">Completed: {edu.completionDate}</p>
                   </div>
-                  {isAdmin && !edu.id.toString().startsWith('static-') && (
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingEdu(edu); setIsEduOpen(true); }}>
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteEducation(firestore, edu.id)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
                 </div>
                 {edu.relevantCourseworkOrFocusAreas && edu.relevantCourseworkOrFocusAreas.length > 0 && (
                   <div className="mt-2">
@@ -108,11 +83,6 @@ const EducationSection = () => {
               <Award className="text-primary" />
               Certifications
             </CardTitle>
-            {isAdmin && (
-              <Button size="sm" variant="ghost" onClick={() => { setEditingCert(null); setIsCertOpen(true); }}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
-            )}
           </CardHeader>
           <CardContent className="space-y-6">
             {displayedCert.map((cert: any) => (
@@ -122,16 +92,6 @@ const EducationSection = () => {
                     <h3 className="font-semibold text-lg">{cert.certificationName}</h3>
                     <p className="text-muted-foreground text-sm">Issued by {cert.issuingOrganization} &bull; {cert.yearEarned}</p>
                   </div>
-                  {isAdmin && !cert.id.toString().startsWith('static-') && (
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingCert(cert); setIsCertOpen(true); }}>
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteCertification(firestore, cert.id)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
                 </div>
                 {cert.credentialURL && (
                   <Button asChild variant="link" className="p-0 h-auto mt-1 text-primary text-xs">
@@ -145,19 +105,6 @@ const EducationSection = () => {
           </CardContent>
         </Card>
       </div>
-
-      <EducationFormDialog 
-        open={isEduOpen} 
-        onOpenChange={setIsEduOpen} 
-        onSubmit={(data) => editingEdu ? updateEducation(firestore, editingEdu.id, data) : addEducation(firestore, 'russell-robbins', data)} 
-        education={editingEdu}
-      />
-      <CertificationFormDialog 
-        open={isCertOpen} 
-        onOpenChange={setIsCertOpen} 
-        onSubmit={(data) => editingCert ? updateCertification(firestore, editingCert.id, data) : addCertification(firestore, 'russell-robbins', data)} 
-        certification={editingCert}
-      />
     </Section>
   );
 };

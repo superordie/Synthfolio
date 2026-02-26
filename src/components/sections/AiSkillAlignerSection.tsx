@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { alignWithJobDescription } from '@/app/actions';
+import { alignWithJobDescription } from '@/app/admin/actions';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { JobDescriptionSkillHighlighterOutput } from '@/ai/flows/job-description-skill-highlighter';

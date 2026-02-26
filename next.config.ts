@@ -1,7 +1,10 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /* This ensures /admin is always treated as /admin/ which 
+     helps Firebase App Hosting find your folder correctly. */
+  trailingSlash: true, 
+
   typescript: {
     ignoreBuildErrors: true,
   },
