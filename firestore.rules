@@ -1,36 +1,19 @@
-/**
- * PORTFOLIO SECURITY RULES
- *
- * This ruleset defines access for the portfolio's top-level and nested collections.
- * 1. Public Read: Anyone can view content under /users/{userId}/...
- * 2. Admin Write: For the simplicity of this password-protected CMS, 
- *    writes are allowed to the user's specific path.
- */
-
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Main rule for all user-specific portfolio data
-    // Matches:
-    // /users/russell-robbins/projects
-    // /users/russell-robbins/skills
-    // /users/russell-robbins/portfolio/bio
-    match /users/{userId}/{allPaths=**} {
+    
+    // 1. Portfolio Data: Allow anyone to READ (so your site works)
+    // and allow authenticated users to WRITE (so your admin panel works)
+    match /users/russell-robbins/{document=**} {
       allow read: if true;
-      allow write: if true; 
+      allow write: if request.auth != null;
     }
 
-    // Fallback for top-level collections if used
-    match /skills/{id} { allow read: if true; allow write: if true; }
-    match /projects/{id} { allow read: if true; allow write: if true; }
-    match /experience/{id} { allow read: if true; allow write: if true; }
-    match /education/{id} { allow read: if true; allow write: if true; }
-    match /certifications/{id} { allow read: if true; allow write: if true; }
-
-    // Global default deny
-    match /{document=**} {
-      allow read, write: if false;
+    // 2. Specific Collections: Explicitly allow listing for your Admin Dashboard
+    match /users/russell-robbins/{collection}/{docId} {
+      allow read, list: if true;
+      allow write: if request.auth != null;
     }
   }
 }

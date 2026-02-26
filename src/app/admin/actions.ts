@@ -71,6 +71,70 @@ export async function deleteProjectAction(projectId: string) {
 }
 
 /**
+ * Saves or updates an Experience entry.
+ */
+export async function saveExperience(exp: any) {
+  try {
+    const colRef = collection(db, 'users', USER_ID, 'experience');
+    if (exp.id) {
+      const docRef = doc(db, 'users', USER_ID, 'experience', exp.id);
+      const { id, ...data } = exp;
+      await updateDoc(docRef, data);
+    } else {
+      await addDoc(colRef, { ...exp, createdAt: new Date().toISOString() });
+    }
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Deletes an Experience entry.
+ */
+export async function deleteExperienceAction(id: string) {
+  try {
+    const docRef = doc(db, 'users', USER_ID, 'experience', id);
+    await deleteDoc(docRef);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Saves or updates an Education entry.
+ */
+export async function saveEducation(edu: any) {
+  try {
+    const colRef = collection(db, 'users', USER_ID, 'education');
+    if (edu.id) {
+      const docRef = doc(db, 'users', USER_ID, 'education', edu.id);
+      const { id, ...data } = edu;
+      await updateDoc(docRef, data);
+    } else {
+      await addDoc(colRef, { ...edu, createdAt: new Date().toISOString() });
+    }
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Deletes an Education entry.
+ */
+export async function deleteEducationAction(id: string) {
+  try {
+    const docRef = doc(db, 'users', USER_ID, 'education', id);
+    await deleteDoc(docRef);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Updates a skill category in Firestore.
  */
 export async function updateSkillsCategory(category: { id?: string; title: string; skills: string[] }) {
@@ -113,9 +177,13 @@ export async function alignWithJobDescription(jobDescription: string) {
     const bioSnap = await getDoc(doc(db, 'users', USER_ID, 'portfolio', 'bio'));
     const projectsSnap = await getDocs(collection(db, 'users', USER_ID, 'projects'));
     const skillsSnap = await getDocs(collection(db, 'users', USER_ID, 'skills'));
+    const expSnap = await getDocs(collection(db, 'users', USER_ID, 'experience'));
+    const eduSnap = await getDocs(collection(db, 'users', USER_ID, 'education'));
 
     const liveProjects = projectsSnap.docs.map(d => d.data());
     const liveSkills = skillsSnap.docs.map(d => d.data());
+    const liveExp = expSnap.docs.map(d => d.data());
+    const liveEdu = eduSnap.docs.map(d => d.data());
     const liveBio = bioSnap.exists() ? bioSnap.data().about : staticContent.aboutMe;
 
     // 2. Format skills for the AI prompt
@@ -138,8 +206,18 @@ export async function alignWithJobDescription(jobDescription: string) {
           projectLink: p.projectLink || ""
         })) : staticContent.projects,
         skills: formattedSkills,
-        workHistory: staticContent.workHistory,
-        education: staticContent.education,
+        workHistory: liveExp.length > 0 ? liveExp.map((e: any) => ({
+          jobTitleRole: e.jobTitleRole,
+          organizationCompany: e.organizationCompany,
+          datesOfInvolvement: e.datesOfInvolvement,
+          keyResponsibilities: e.keyResponsibilities || []
+        })) : staticContent.workHistory,
+        education: liveEdu.length > 0 ? liveEdu.map((e: any) => ({
+          degreeProgramName: e.degreeProgramName,
+          institutionName: e.institutionName,
+          completionDate: e.completionDate,
+          relevantCourseworkOrFocusAreas: e.relevantCourseworkOrFocusAreas || []
+        })) : staticContent.education,
         certifications: staticContent.certifications
       }
     };

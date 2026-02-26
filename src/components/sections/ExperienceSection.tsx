@@ -1,4 +1,3 @@
-
 'use client';
 
 import Section from '@/components/Section';
@@ -6,19 +5,17 @@ import { CheckCircle, Briefcase } from 'lucide-react';
 import { portfolioContent } from '@/lib/data';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
-import type { Experience } from '@/firebase/firestore/experience';
+
+const USER_ID = 'russell-robbins';
 
 const ExperienceSection = () => {
   const firestore = useFirestore();
 
-  // Fetch live work experience from Firestore
   const expQuery = useMemoFirebase(() => {
-    return query(collection(firestore, 'experience'), orderBy('datesOfInvolvement', 'desc'));
+    return query(collection(firestore, 'users', USER_ID, 'experience'), orderBy('createdAt', 'desc'));
   }, [firestore]);
+  const { data: liveExp } = useCollection(expQuery);
 
-  const { data: liveExp } = useCollection<Experience>(expQuery);
-
-  // Ensure we have a working list, falling back to static data if no live data is found
   const displayedExp = (liveExp && liveExp.length > 0) 
     ? liveExp 
     : portfolioContent.workHistory.map((e, i) => ({ ...e, id: `static-${i}` }));
