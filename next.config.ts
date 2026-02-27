@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'export',
   /* This ensures /admin is always treated as /admin/ which 
      helps Firebase App Hosting find your folder correctly. */
   trailingSlash: true, 
